@@ -2,6 +2,7 @@ package com.goyourfly.vincent
 
 import android.graphics.Bitmap
 import android.net.Uri
+import android.nfc.Tag
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
@@ -9,6 +10,7 @@ import android.os.Message
 import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.common.KeyGenerator
+import com.goyourfly.vincent.common.logD
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -38,10 +40,11 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     val executor = Executors.newSingleThreadExecutor()
     val executorManager = ConcurrentHashMap<String,RequestInfo>()
     val networkHandler = OkHttpRequestHandler()
-    val handler = DispatcherHandler(handlerThread.looper,executor,executorManager,networkHandler)
+    var handler:Handler? =  null
 
     init {
         handlerThread.start()
+        handler = DispatcherHandler(handlerThread.looper,executor,executorManager,networkHandler)
     }
 
     class DispatchHandlerThread(name:String) : HandlerThread(name) {
@@ -58,12 +61,14 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                             val executorManager: ConcurrentHashMap<String,RequestInfo>,
                             val networkHandler:RequestHandler<Bitmap>) : Handler(looper) {
         override fun handleMessage(msg: Message?) {
+            "handleMsg:${msg?.what}".logD("DispatcherHandler")
             when(msg?.what){
                 What.SUBMIT ->{
+                    "handleSubmit".logD("DispatcherHandler")
                     val requestInfo = msg.obj as RequestInfo
                     val future = executor.submit(BitmapThief(this,networkHandler,requestInfo))
                     requestInfo.future = future
-                    executorManager.put(requestInfo.key,requestInfo)
+                    executorManager.put(requestInfo.key!!,requestInfo)
                 }
 
                 What.CANCEL ->{
@@ -79,6 +84,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                     if(executorManager.contains(key)){
                         val requestInfo = executorManager.remove(key)
                         val bitmap = requestInfo?.future?.get()
+                        requestInfo?.target?.onComplete(bitmap!!)
                     }
                 }
             }
@@ -88,15 +94,15 @@ class Dispatcher(val keyGenerator: KeyGenerator,
 
     fun dispatchSubmit(requestInfo: RequestInfo){
         requestInfo.key = keyGenerator.generate(requestInfo.uri.toString())
-        val msg = handler.obtainMessage(What.SUBMIT)
-        msg.obj = requestInfo
-        handler.sendMessage(msg)
+        val msg = handler?.obtainMessage(What.SUBMIT)
+        msg?.obj = requestInfo
+        handler?.sendMessage(msg)
     }
 
     fun dispatchCancel(uri: Uri){
-        val msg = handler.obtainMessage(What.CANCEL)
-        msg.obj = keyGenerator.generate(uri.toString())
-        handler.sendMessage(msg)
+        val msg = handler?.obtainMessage(What.CANCEL)
+        msg?.obj = keyGenerator.generate(uri.toString())
+        handler?.sendMessage(msg)
     }
 
 

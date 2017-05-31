@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.text.TextUtils
 import android.widget.ImageView
+import com.goyourfly.vincent.cache.MemoryCacheManager
+import com.goyourfly.vincent.common.HashCodeGenerator
 
 /**
  * Created by gaoyufei on 2017/5/31.
@@ -11,15 +13,23 @@ import android.widget.ImageView
  * full interface to user
  */
 object Vincent{
+    var dispatcher:Dispatcher? = null
+    val keyGenerator = HashCodeGenerator()
+    val memoryCache = MemoryCacheManager(1024 * 10)
+    val fileCache = MemoryCacheManager(1024 * 10)
+
     fun with(context:Context):Builder{
-        return Builder()
+        if(dispatcher == null){
+            dispatcher = Dispatcher(keyGenerator, memoryCache, fileCache)
+        }
+        return Builder(dispatcher!!)
     }
 
 
     /**
      * Provide all info of request
      */
-    class Builder{
+    class Builder(val dispatcher: Dispatcher){
         /**
          * img uri ,url/file_path
          */
@@ -106,13 +116,27 @@ object Vincent{
             return this
         }
 
-        fun into(target:Target):Builder{
+        fun into(target:Target){
             this.target = target
-            return this
+            val requestInfo = RequestInfo(
+                    null,
+                    uri,
+                    pre_uri,
+                    resizeWidth,
+                    resizeHeight,
+                    scale,
+                    cache,
+                    priority,
+                    target,
+                    placeholderId,
+                    errorId,
+                    null
+            )
+            dispatcher.dispatchSubmit(requestInfo)
         }
 
-        fun into(imageView: ImageView):Builder{
-            return into(ImageTarget(imageView,placeholderId,errorId))
+        fun into(imageView: ImageView){
+            into(ImageTarget(imageView,placeholderId,errorId))
         }
     }
 }

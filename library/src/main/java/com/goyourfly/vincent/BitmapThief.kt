@@ -11,6 +11,8 @@ import java.util.concurrent.Callable
 
 class BitmapThief(val handler:Handler,val requestHandler: RequestHandler<Bitmap>,val requestInfo: RequestInfo):Callable<Bitmap>{
     override fun call(): Bitmap {
-        return requestHandler.fetchSync(requestInfo.uri)
+        val bitmap = requestHandler.fetchSync(requestInfo.uri)
+        handler.sendMessage(handler.obtainMessage(Dispatcher.What.THIEF_COMPLETE))
+        return bitmap
     }
 }
