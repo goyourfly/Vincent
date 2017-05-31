@@ -11,3 +11,8 @@ fun String.logD(tag: String) {
     if (isDebug)
         Log.d(tag, this)
 }
+
+fun String.logD(){
+    if(isDebug)
+        Log.d("------------>",this)
+}

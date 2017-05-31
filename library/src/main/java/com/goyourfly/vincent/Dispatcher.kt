@@ -1,5 +1,6 @@
 package com.goyourfly.vincent
 
+import android.accounts.NetworkErrorException
 import android.graphics.Bitmap
 import android.net.Uri
 import android.nfc.Tag
@@ -41,10 +42,11 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     val executorManager = ConcurrentHashMap<String,RequestInfo>()
     val networkHandler = OkHttpRequestHandler()
     var handler:Handler? =  null
+    var handlerMain = Handler(Looper.getMainLooper())
 
     init {
         handlerThread.start()
-        handler = DispatcherHandler(handlerThread.looper,executor,executorManager,networkHandler)
+        handler = DispatcherHandler(handlerThread.looper,executor,executorManager,networkHandler,handlerMain)
     }
 
     class DispatchHandlerThread(name:String) : HandlerThread(name) {
@@ -59,12 +61,12 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     class DispatcherHandler(looper: Looper,
                             val executor: ExecutorService,
                             val executorManager: ConcurrentHashMap<String,RequestInfo>,
-                            val networkHandler:RequestHandler<Bitmap>) : Handler(looper) {
+                            val networkHandler:RequestHandler<Bitmap>,
+                            val handlerMain:Handler) : Handler(looper) {
         override fun handleMessage(msg: Message?) {
-            "handleMsg:${msg?.what}".logD("DispatcherHandler")
+            "handleMsg:${msg?.what}".logD()
             when(msg?.what){
                 What.SUBMIT ->{
-                    "handleSubmit".logD("DispatcherHandler")
                     val requestInfo = msg.obj as RequestInfo
                     val future = executor.submit(BitmapThief(this,networkHandler,requestInfo))
                     requestInfo.future = future
@@ -81,10 +83,20 @@ class Dispatcher(val keyGenerator: KeyGenerator,
 
                 What.THIEF_COMPLETE ->{
                     val key = msg.obj as String
-                    if(executorManager.contains(key)){
+                    "thiefComplete:Key$key,${executorManager.contains(key)}".logD()
+                    if(executorManager.containsKey(key)){
                         val requestInfo = executorManager.remove(key)
                         val bitmap = requestInfo?.future?.get()
-                        requestInfo?.target?.onComplete(bitmap!!)
+                        handlerMain.post { requestInfo!!.target.onComplete(bitmap!!) }
+                    }
+                }
+
+                What.THIEF_ERROR -> {
+                    val key = msg.obj as String
+                    "thiefError:Key$key,${executorManager.contains(key)}".logD()
+                    if(executorManager.containsKey(key)){
+                        val requestInfo = executorManager.remove(key)
+                        handlerMain.post { requestInfo!!.target.onError(NetworkErrorException()) }
                     }
                 }
             }
