@@ -1,5 +1,6 @@
 package com.goyourfly.vincent
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
@@ -36,7 +37,8 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
     val executor = Executors.newSingleThreadExecutor()
     val executorManager = ConcurrentHashMap<String,RequestInfo>()
-    val handler = DispatcherHandler(handlerThread.looper,executor,executorManager)
+    val networkHandler = OkHttpRequestHandler()
+    val handler = DispatcherHandler(handlerThread.looper,executor,executorManager,networkHandler)
 
     init {
         handlerThread.start()
@@ -53,12 +55,13 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      */
     class DispatcherHandler(looper: Looper,
                             val executor: ExecutorService,
-                            val executorManager: ConcurrentHashMap<String,RequestInfo>) : Handler(looper) {
+                            val executorManager: ConcurrentHashMap<String,RequestInfo>,
+                            val networkHandler:RequestHandler<Bitmap>) : Handler(looper) {
         override fun handleMessage(msg: Message?) {
             when(msg?.what){
                 What.SUBMIT ->{
                     val requestInfo = msg.obj as RequestInfo
-                    val future = executor.submit(BitmapThief(this,requestInfo))
+                    val future = executor.submit(BitmapThief(this,networkHandler,requestInfo))
                     requestInfo.future = future
                     executorManager.put(requestInfo.key,requestInfo)
                 }
