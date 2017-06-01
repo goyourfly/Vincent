@@ -2,13 +2,13 @@ package com.goyourfly.vincent
 
 import android.graphics.Bitmap
 import android.net.Uri
+import com.goyourfly.vincent.common.KeyGenerator
 import java.util.concurrent.Future
 
 /**
  * Created by gaoyufei on 2017/5/31.
  */
 data class RequestInfo(
-        var key:String?,
         val uri: Uri,
         val preUri:Uri,
         val resizeWidth:Int,
@@ -19,4 +19,9 @@ data class RequestInfo(
         val target:Target,
         val placeholderId:Int,
         val errorId:Int,
-        var future: Future<Bitmap>?)
+        val keyGenerator: KeyGenerator){
+
+    val key:String by lazy { keyGenerator.generate(uri.toString(),target) }
+    var future:Future<Bitmap>? = null
+
+}

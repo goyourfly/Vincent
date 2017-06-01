@@ -7,9 +7,13 @@ import com.goyourfly.vincent.common.logD
  * Created by gaoyufei on 2017/5/31.
  */
 class MemoryCacheManager(cacheSize:Int):CacheManager<CacheSeed>{
+
     val TAG = "MemoryCacheManager"
     val lruCache:LruCache<String,CacheSeed> = LruCache(cacheSize)
 
+    override fun contain(key: String): Boolean {
+        return lruCache.get(key) != null
+    }
     override fun set(key: String, value: CacheSeed) {
         lruCache.put(key,value)
         "set:$key=$value".logD(TAG)

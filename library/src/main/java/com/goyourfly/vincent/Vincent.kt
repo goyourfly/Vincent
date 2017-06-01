@@ -119,7 +119,6 @@ object Vincent{
         fun into(target:Target){
             this.target = target
             val requestInfo = RequestInfo(
-                    null,
                     uri,
                     pre_uri,
                     resizeWidth,
@@ -130,7 +129,7 @@ object Vincent{
                     target,
                     placeholderId,
                     errorId,
-                    null
+                    HashCodeGenerator()
             )
             dispatcher.dispatchSubmit(requestInfo)
         }

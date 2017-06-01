@@ -12,6 +12,7 @@ import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.decoder.DecodeManager
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -21,10 +22,10 @@ import java.util.concurrent.Executors
  *
  */
 class Dispatcher(val keyGenerator: KeyGenerator,
-                 val memoryCache:CacheManager<CacheSeed>,
-                 val fileCache:CacheManager<CacheSeed>){
+                 val memoryCache: CacheManager<CacheSeed>,
+                 val fileCache: CacheManager<CacheSeed>) {
 
-    object What{
+    object What {
         val SUBMIT = 1
         val CANCEL = 2
 
@@ -39,17 +40,23 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      */
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
     val executor = Executors.newFixedThreadPool(4)
-    val executorManager = ConcurrentHashMap<String,RequestInfo>()
-    val networkHandler = OkHttpRequestHandler()
-    var handler:Handler? =  null
+    val executorManager = ConcurrentHashMap<String, RequestInfo>()
+    val networkHandler = OkHttpRequestHandler(DecodeManager())
+    var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
     init {
         handlerThread.start()
-        handler = DispatcherHandler(handlerThread.looper,executor,executorManager,networkHandler,handlerMain)
+        handler = DispatcherHandler(handlerThread.looper,
+                executor,
+                executorManager,
+                networkHandler,
+                memoryCache,
+                fileCache,
+                handlerMain)
     }
 
-    class DispatchHandlerThread(name:String) : HandlerThread(name) {
+    class DispatchHandlerThread(name: String) : HandlerThread(name) {
 
     }
 
@@ -60,31 +67,31 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      */
     class DispatcherHandler(looper: Looper,
                             val executor: ExecutorService,
-                            val executorManager: ConcurrentHashMap<String,RequestInfo>,
-                            val networkHandler:RequestHandler<Bitmap>,
-                            val handlerMain:Handler) : Handler(looper) {
+                            val executorManager: ConcurrentHashMap<String, RequestInfo>,
+                            val networkHandler: RequestHandler<Bitmap>,
+                            val memoryCache: CacheManager<CacheSeed>,
+                            val fileCache: CacheManager<CacheSeed>,
+                            val handlerMain: Handler) : Handler(looper) {
         override fun handleMessage(msg: Message?) {
             "handleMsg:${msg?.what}".logD()
-            when(msg?.what){
-                What.SUBMIT ->{
+            when (msg?.what) {
+                What.SUBMIT -> {
                     val requestInfo = msg.obj as RequestInfo
-                    val future = executor.submit(BitmapThief(this,networkHandler,requestInfo))
-                    requestInfo.future = future
-                    executorManager.put(requestInfo.key!!,requestInfo)
+                    handleSubmit(requestInfo)
                 }
 
-                What.CANCEL ->{
+                What.CANCEL -> {
                     val key = msg.obj as String
-                    if(executorManager.contains(key)){
+                    if (executorManager.contains(key)) {
                         val future = executorManager.remove(key)?.future
                         future?.cancel(true)
                     }
                 }
 
-                What.THIEF_COMPLETE ->{
+                What.THIEF_COMPLETE -> {
                     val key = msg.obj as String
                     "thiefComplete:Key$key,${executorManager.contains(key)}".logD()
-                    if(executorManager.containsKey(key)){
+                    if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.remove(key)
                         val bitmap = requestInfo?.future?.get()
                         handlerMain.post { requestInfo!!.target.onComplete(bitmap!!) }
@@ -94,29 +101,45 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                 What.THIEF_ERROR -> {
                     val key = msg.obj as String
                     "thiefError:Key$key,${executorManager.contains(key)}".logD()
-                    if(executorManager.containsKey(key)){
+                    if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.remove(key)
                         handlerMain.post { requestInfo!!.target.onError(NetworkErrorException()) }
                     }
                 }
             }
+
+
+        }
+
+        fun handleSubmit(requestInfo: RequestInfo) {
+            val key = requestInfo.key!!
+            //首先判断内存的缓存中是否存在该图片
+            if (memoryCache.contain(key)) {
+                handlerMain.post { requestInfo.target.onComplete(memoryCache.get(key).value) }
+                return
+            }
+            if (fileCache.contain(requestInfo.key!!)) {
+                //TODO 判断本地文件系统是否缓存该图
+                return
+            }
+            val future = executor.submit(BitmapThief(this, networkHandler, requestInfo))
+            requestInfo.future = future
+            executorManager.put(requestInfo.key!!, requestInfo)
         }
     }
 
 
-    fun dispatchSubmit(requestInfo: RequestInfo){
-        requestInfo.key = keyGenerator.generate(requestInfo.uri.toString(),requestInfo.target)
+    fun dispatchSubmit(requestInfo: RequestInfo) {
         val msg = handler?.obtainMessage(What.SUBMIT)
         msg?.obj = requestInfo
         handler?.sendMessage(msg)
     }
 
-    fun dispatchCancel(uri: Uri,target: Target){
+    fun dispatchCancel(uri: Uri, target: Target) {
         val msg = handler?.obtainMessage(What.CANCEL)
-        msg?.obj = keyGenerator.generate(uri.toString(),target)
+        msg?.obj = keyGenerator.generate(uri.toString(), target)
         handler?.sendMessage(msg)
     }
-
 
 
 }

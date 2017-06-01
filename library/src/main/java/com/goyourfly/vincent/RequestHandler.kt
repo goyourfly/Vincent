@@ -1,11 +1,13 @@
 package com.goyourfly.vincent
 
 import android.net.Uri
+import com.goyourfly.vincent.decoder.BitmapDecoder
+import com.goyourfly.vincent.decoder.DecodeManager
 
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-interface RequestHandler<T>{
+open class RequestHandler<T>(val decoder: DecodeManager){
     interface RequestListener<T>{
 
         fun onSuccess(t:T)
@@ -14,7 +16,7 @@ interface RequestHandler<T>{
 
     }
 
-    fun fetchSync(uri:Uri):T
+    open fun fetchSync(uri:Uri):T? = null
 
-    fun fetchAsync(uri: Uri,listener:RequestListener<T>)
+    open fun fetchAsync(uri: Uri, listener:RequestListener<T>){}
 }

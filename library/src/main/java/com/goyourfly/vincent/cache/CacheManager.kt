@@ -9,6 +9,8 @@ interface CacheManager<T>{
 
     fun get(key:String):T
 
+    fun contain(key:String):Boolean
+
     fun delete(key:String):T
 
     fun update(key:String,value:T)
