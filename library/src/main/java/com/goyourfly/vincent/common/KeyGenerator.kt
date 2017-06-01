@@ -7,5 +7,9 @@ import com.goyourfly.vincent.Target
  */
 
 interface KeyGenerator{
+
     fun generate(str:String,target:Target):String
+
+    fun generate(str:String):String
+
 }

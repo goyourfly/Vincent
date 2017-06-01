@@ -1,6 +1,7 @@
 package com.goyourfly.vincent.decoder
 
 import android.graphics.Bitmap
+import java.io.File
 import java.io.InputStream
 
 /**
@@ -12,6 +13,8 @@ interface BitmapDecoder {
     fun decode(stream: InputStream):Bitmap?
 
     fun decode(bytes: ByteArray):Bitmap?
+
+    fun decode(file:File):Bitmap?
 
     fun canDecode():Boolean
 }

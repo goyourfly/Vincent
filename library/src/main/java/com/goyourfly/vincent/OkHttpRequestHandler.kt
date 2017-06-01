@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class OkHttpRequestHandler(decoder: DecodeManager):RequestHandler<Bitmap>(decoder) {
+class OkHttpRequestHandler():RequestHandler<Bitmap>() {
 
     val client = OkHttpClient.Builder()
             .connectTimeout(10,TimeUnit.SECONDS)
@@ -36,7 +36,7 @@ class OkHttpRequestHandler(decoder: DecodeManager):RequestHandler<Bitmap>(decode
                 .build()
         val response = client.newCall(request).execute()
         "RequestMid:${uri.toString()}".logD()
-        val bitmap = decoder.decode(response.body()!!.byteStream())
+        val bitmap = DecodeManager.decode(response.body()!!.byteStream())
         val body = response.body()
         if (!response.isSuccessful()) {
             body?.close();

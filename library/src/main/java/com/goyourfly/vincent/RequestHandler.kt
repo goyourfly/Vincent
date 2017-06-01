@@ -7,7 +7,7 @@ import com.goyourfly.vincent.decoder.DecodeManager
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-open class RequestHandler<T>(val decoder: DecodeManager){
+open class RequestHandler<T>(){
     interface RequestListener<T>{
 
         fun onSuccess(t:T)

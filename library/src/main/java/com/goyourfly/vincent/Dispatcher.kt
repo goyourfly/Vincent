@@ -3,7 +3,6 @@ package com.goyourfly.vincent
 import android.accounts.NetworkErrorException
 import android.graphics.Bitmap
 import android.net.Uri
-import android.nfc.Tag
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
@@ -12,7 +11,6 @@ import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.decoder.DecodeManager
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -41,7 +39,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
     val executor = Executors.newFixedThreadPool(4)
     val executorManager = ConcurrentHashMap<String, RequestInfo>()
-    val networkHandler = OkHttpRequestHandler(DecodeManager())
+    val networkHandler = OkHttpRequestHandler()
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
@@ -94,7 +92,12 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                     if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.remove(key)
                         val bitmap = requestInfo?.future?.get()
-                        handlerMain.post { requestInfo!!.target.onComplete(bitmap!!) }
+                        if(bitmap != null) {
+                            memoryCache.set(requestInfo.keyForCache,CacheSeed(key,bitmap))
+                            fileCache.set(requestInfo.keyForCache,CacheSeed(key,bitmap))
+
+                            handlerMain.post { requestInfo.target.onComplete(bitmap) }
+                        }
                     }
                 }
 
@@ -112,19 +115,26 @@ class Dispatcher(val keyGenerator: KeyGenerator,
         }
 
         fun handleSubmit(requestInfo: RequestInfo) {
-            val key = requestInfo.key!!
+            val key = requestInfo.key
             //首先判断内存的缓存中是否存在该图片
-            if (memoryCache.contain(key)) {
-                handlerMain.post { requestInfo.target.onComplete(memoryCache.get(key).value) }
-                return
+            if (memoryCache.contain(requestInfo.keyForCache)) {
+                val bitmap = memoryCache.get(requestInfo.keyForCache).value
+                if(bitmap != null) {
+                    handlerMain.post { requestInfo.target.onComplete(bitmap) }
+                    return
+                }
             }
-            if (fileCache.contain(requestInfo.key!!)) {
+            if (fileCache.contain(requestInfo.key)) {
                 //TODO 判断本地文件系统是否缓存该图
-                return
+                val bitmap = fileCache.get(requestInfo.keyForCache).value
+                if(bitmap != null) {
+                    handlerMain.post { requestInfo.target.onComplete(bitmap) }
+                    return
+                }
             }
             val future = executor.submit(BitmapThief(this, networkHandler, requestInfo))
             requestInfo.future = future
-            executorManager.put(requestInfo.key!!, requestInfo)
+            executorManager.put(requestInfo.key, requestInfo)
         }
     }
 

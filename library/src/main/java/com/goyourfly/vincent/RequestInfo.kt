@@ -22,6 +22,7 @@ data class RequestInfo(
         val keyGenerator: KeyGenerator){
 
     val key:String by lazy { keyGenerator.generate(uri.toString(),target) }
+    val keyForCache:String = keyGenerator.generate(uri.toString())
     var future:Future<Bitmap>? = null
 
 }

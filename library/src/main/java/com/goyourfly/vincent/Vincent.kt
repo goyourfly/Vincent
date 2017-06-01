@@ -4,6 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.text.TextUtils
 import android.widget.ImageView
+import com.goyourfly.vincent.cache.CacheManager
+import com.goyourfly.vincent.cache.CacheSeed
+import com.goyourfly.vincent.cache.FileCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
 
@@ -16,11 +19,14 @@ object Vincent{
     var dispatcher:Dispatcher? = null
     val keyGenerator = HashCodeGenerator()
     val memoryCache = MemoryCacheManager(1024 * 10)
-    val fileCache = MemoryCacheManager(1024 * 10)
+    var fileCache:CacheManager<CacheSeed>? = null
 
     fun with(context:Context):Builder{
+        if(fileCache == null){
+            fileCache = FileCacheManager(1024 * 20,"data/data/${context.packageName}/vincent/cache/")
+        }
         if(dispatcher == null){
-            dispatcher = Dispatcher(keyGenerator, memoryCache, fileCache)
+            dispatcher = Dispatcher(keyGenerator, memoryCache, fileCache!!)
         }
         return Builder(dispatcher!!)
     }
