@@ -38,7 +38,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      * of Vincent called
      */
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
-    val executor = Executors.newSingleThreadExecutor()
+    val executor = Executors.newFixedThreadPool(4)
     val executorManager = ConcurrentHashMap<String,RequestInfo>()
     val networkHandler = OkHttpRequestHandler()
     var handler:Handler? =  null
@@ -105,15 +105,15 @@ class Dispatcher(val keyGenerator: KeyGenerator,
 
 
     fun dispatchSubmit(requestInfo: RequestInfo){
-        requestInfo.key = keyGenerator.generate(requestInfo.uri.toString())
+        requestInfo.key = keyGenerator.generate(requestInfo.uri.toString(),requestInfo.target)
         val msg = handler?.obtainMessage(What.SUBMIT)
         msg?.obj = requestInfo
         handler?.sendMessage(msg)
     }
 
-    fun dispatchCancel(uri: Uri){
+    fun dispatchCancel(uri: Uri,target: Target){
         val msg = handler?.obtainMessage(What.CANCEL)
-        msg?.obj = keyGenerator.generate(uri.toString())
+        msg?.obj = keyGenerator.generate(uri.toString(),target)
         handler?.sendMessage(msg)
     }
 

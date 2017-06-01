@@ -1,10 +1,9 @@
 package com.goyourfly.vincent
 
-import android.accounts.NetworkErrorException
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Handler
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.common.logE
 import java.util.concurrent.Callable
 
 /**
@@ -24,6 +23,7 @@ class BitmapThief(val handler:Handler,
             "end get bitmap".logD()
             return bitmap
         }catch (e: Exception){
+            e.message?.logE()
             val msg = handler.obtainMessage(Dispatcher.What.THIEF_ERROR)
             msg.obj = requestInfo.key
             handler.sendMessage(msg)

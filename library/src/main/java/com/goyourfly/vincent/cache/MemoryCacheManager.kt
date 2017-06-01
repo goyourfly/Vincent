@@ -6,7 +6,7 @@ import com.goyourfly.vincent.common.logD
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class MemoryCacheManager(val cacheSize:Int):CacheManager<CacheSeed>{
+class MemoryCacheManager(cacheSize:Int):CacheManager<CacheSeed>{
     val TAG = "MemoryCacheManager"
     val lruCache:LruCache<String,CacheSeed> = LruCache(cacheSize)
 

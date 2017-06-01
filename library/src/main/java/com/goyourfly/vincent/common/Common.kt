@@ -16,3 +16,8 @@ fun String.logD(){
     if(isDebug)
         Log.d("------------>",this)
 }
+
+fun String.logE(){
+    if(isDebug)
+        Log.e("------------>",this)
+}
