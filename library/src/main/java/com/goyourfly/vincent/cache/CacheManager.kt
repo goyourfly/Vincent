@@ -13,7 +13,5 @@ interface CacheManager<T>{
 
     fun delete(key:String):T
 
-    fun update(key:String,value:T)
-
     fun clear();
 }

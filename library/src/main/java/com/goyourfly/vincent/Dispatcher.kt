@@ -1,7 +1,6 @@
 package com.goyourfly.vincent
 
 import android.accounts.NetworkErrorException
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
@@ -11,9 +10,8 @@ import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.common.logD
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.io.File
+import java.util.concurrent.*
 
 /**
  * Created by gaoyufei on 2017/5/31.
@@ -21,15 +19,19 @@ import java.util.concurrent.Executors
  */
 class Dispatcher(val keyGenerator: KeyGenerator,
                  val memoryCache: CacheManager<CacheSeed>,
-                 val fileCache: CacheManager<CacheSeed>) {
+                 val fileCache: CacheManager<File>) {
 
     object What {
         val SUBMIT = 1
         val CANCEL = 2
 
-        val THIEF_COMPLETE = 3
-        val THIEF_CANCEL = 4
-        val THIEF_ERROR = 5
+        val DOWNLOAD_FINISH = 4
+        val DOWNLOAD_ERROR = 5
+
+        val MEMORY_LOAD_COMPLETE = 6
+
+        val FILE_LOAD_COMPLETE = 7
+        val FILE_LOAD_ERROR = 8
     }
 
     /**
@@ -38,8 +40,9 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      */
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
     val executor = Executors.newFixedThreadPool(4)
+    val executorBitmap = Executors.newSingleThreadExecutor()
     val executorManager = ConcurrentHashMap<String, RequestInfo>()
-    val networkHandler = OkHttpRequestHandler()
+    val networkHandler = OkHttpRequestHandler(fileCache)
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
@@ -47,6 +50,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
         handlerThread.start()
         handler = DispatcherHandler(handlerThread.looper,
                 executor,
+                executorBitmap,
                 executorManager,
                 networkHandler,
                 memoryCache,
@@ -65,76 +69,83 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      */
     class DispatcherHandler(looper: Looper,
                             val executor: ExecutorService,
+                            val executorBitmap: ExecutorService,
                             val executorManager: ConcurrentHashMap<String, RequestInfo>,
-                            val networkHandler: RequestHandler<Bitmap>,
+                            val networkHandler: RequestHandler<File>,
                             val memoryCache: CacheManager<CacheSeed>,
-                            val fileCache: CacheManager<CacheSeed>,
+                            val fileCache: CacheManager<File>,
                             val handlerMain: Handler) : Handler(looper) {
         override fun handleMessage(msg: Message?) {
-            "handleMsg:${msg?.what}".logD()
+            "handleMsg:${msg?.what} + ${msg?.obj}".logD()
             when (msg?.what) {
                 What.SUBMIT -> {
                     val requestInfo = msg.obj as RequestInfo
-                    handleSubmit(requestInfo)
+                    val key = requestInfo.key
+                    executorManager.put(key, requestInfo)
+                    // 首先判断内存的缓存中是否存在该图片
+                    if (memoryCache.contain(requestInfo.keyForCache)) {
+                        sendMessage(obtainMessage(What.MEMORY_LOAD_COMPLETE, key))
+                        return
+                    }
+                    // if local cache contain file
+                    if (fileCache.contain(requestInfo.keyForCache)) {
+                        sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
+                        return
+                    }
+                    executor.submit(RunFileDownloader(this, networkHandler, requestInfo))
                 }
 
                 What.CANCEL -> {
                     val key = msg.obj as String
-                    if (executorManager.contains(key)) {
+                    if (executorManager.containsKey(key)) {
                         val future = executorManager.remove(key)?.future
                         future?.cancel(true)
                     }
                 }
 
-                What.THIEF_COMPLETE -> {
-                    val key = msg.obj as String
-                    "thiefComplete:Key$key,${executorManager.contains(key)}".logD()
-                    if (executorManager.containsKey(key)) {
-                        val requestInfo = executorManager.remove(key)
-                        val bitmap = requestInfo?.future?.get()
-                        if(bitmap != null) {
-                            memoryCache.set(requestInfo.keyForCache,CacheSeed(key,bitmap))
-                            fileCache.set(requestInfo.keyForCache,CacheSeed(key,bitmap))
 
+                What.DOWNLOAD_FINISH -> {
+                    val key = msg.obj as String
+                    if (executorManager.containsKey(key)) {
+                        val requestInfo = executorManager.get(key)!!
+                        //TODO 判断本地文件系统是否缓存该图
+                        val file = fileCache.get(requestInfo.keyForCache)
+                        requestInfo.future = executorBitmap.submit(RunBitmapMaker(this, key, file))
+                    }
+                }
+
+                What.MEMORY_LOAD_COMPLETE -> {
+                    val key = msg.obj as String
+                    if (executorManager.containsKey(key)) {
+                        val requestInfo = executorManager.remove(key)!!
+                        val bitmap = memoryCache.get(requestInfo.keyForCache).value
+                        if (bitmap != null) {
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
                         }
                     }
                 }
 
-                What.THIEF_ERROR -> {
+                What.FILE_LOAD_COMPLETE -> {
                     val key = msg.obj as String
-                    "thiefError:Key$key,${executorManager.contains(key)}".logD()
+                    if (executorManager.containsKey(key)) {
+                        val requestInfo = executorManager.remove(key)
+                        val bitmap = requestInfo?.future?.get()
+                        if (bitmap != null) {
+                            "handleMsg:7 set image".logD()
+                            memoryCache.set(requestInfo.keyForCache, CacheSeed(key, bitmap))
+                            handlerMain.post { requestInfo.target.onComplete(bitmap) }
+                        }
+                    }
+                }
+
+                What.FILE_LOAD_ERROR or What.DOWNLOAD_ERROR -> {
+                    val key = msg.obj as String
                     if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.remove(key)
                         handlerMain.post { requestInfo!!.target.onError(NetworkErrorException()) }
                     }
                 }
             }
-
-
-        }
-
-        fun handleSubmit(requestInfo: RequestInfo) {
-            val key = requestInfo.key
-            //首先判断内存的缓存中是否存在该图片
-            if (memoryCache.contain(requestInfo.keyForCache)) {
-                val bitmap = memoryCache.get(requestInfo.keyForCache).value
-                if(bitmap != null) {
-                    handlerMain.post { requestInfo.target.onComplete(bitmap) }
-                    return
-                }
-            }
-            if (fileCache.contain(requestInfo.key)) {
-                //TODO 判断本地文件系统是否缓存该图
-                val bitmap = fileCache.get(requestInfo.keyForCache).value
-                if(bitmap != null) {
-                    handlerMain.post { requestInfo.target.onComplete(bitmap) }
-                    return
-                }
-            }
-            val future = executor.submit(BitmapThief(this, networkHandler, requestInfo))
-            requestInfo.future = future
-            executorManager.put(requestInfo.key, requestInfo)
         }
     }
 

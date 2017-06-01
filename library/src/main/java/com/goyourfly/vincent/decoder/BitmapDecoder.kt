@@ -16,5 +16,9 @@ interface BitmapDecoder {
 
     fun decode(file:File):Bitmap?
 
-    fun canDecode():Boolean
+    fun canDecode(stream: InputStream):Boolean
+
+    fun canDecode(bytes: ByteArray):Boolean
+
+    fun canDecode(file: File):Boolean
 }

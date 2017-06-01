@@ -29,11 +29,6 @@ class MemoryCacheManager(cacheSize:Int):CacheManager<CacheSeed>{
         return lruCache.remove(key)
     }
 
-    override fun update(key: String, value: CacheSeed) {
-        "update:$key=$value".logD(TAG)
-        lruCache.put(key,value)
-    }
-
     override fun clear() {
         "clear------------>>>".logD(TAG)
         lruCache.evictAll()

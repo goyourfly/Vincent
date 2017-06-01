@@ -10,6 +10,18 @@ import java.io.InputStream
  */
 
 class NormalBitmapDecoder:BitmapDecoder{
+    override fun canDecode(stream: InputStream): Boolean {
+        return true
+    }
+
+    override fun canDecode(bytes: ByteArray): Boolean {
+        return true
+    }
+
+    override fun canDecode(file: File): Boolean {
+        return true
+    }
+
     override fun decode(file: File): Bitmap? {
         return BitmapFactory.decodeFile(file.path)
     }
@@ -21,9 +33,4 @@ class NormalBitmapDecoder:BitmapDecoder{
     override fun decode(bytes: ByteArray) :Bitmap?{
         return BitmapFactory.decodeByteArray(bytes,0,bytes.size)
     }
-
-    override fun canDecode(): Boolean {
-        return true
-    }
-
 }

@@ -16,7 +16,6 @@ open class RequestHandler<T>(){
 
     }
 
-    open fun fetchSync(uri:Uri):T? = null
+    open fun fetchSync(key:String,uri:Uri):T? = null
 
-    open fun fetchAsync(uri: Uri, listener:RequestListener<T>){}
 }

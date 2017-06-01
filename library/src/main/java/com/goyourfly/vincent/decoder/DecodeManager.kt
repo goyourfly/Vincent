@@ -16,8 +16,8 @@ object DecodeManager{
                 || stream.available()!=0)
             return null
         for (decoder in decoderList){
-            if(decoder.canDecode()){
-                return decoder.decode(stream!!)
+            if(decoder.canDecode(stream)){
+                return decoder.decode(stream)
             }
         }
         return null
@@ -25,7 +25,7 @@ object DecodeManager{
 
     fun decode(bytes: ByteArray):Bitmap?{
         for (decoder in decoderList){
-            if(decoder.canDecode()){
+            if(decoder.canDecode(bytes)){
                 return decoder.decode(bytes)
             }
         }
@@ -34,7 +34,7 @@ object DecodeManager{
 
     fun decode(file:File):Bitmap?{
         for (decoder in decoderList){
-            if(decoder.canDecode()){
+            if(decoder.canDecode(file)){
                 return decoder.decode(file)
             }
         }

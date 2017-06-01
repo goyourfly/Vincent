@@ -9,6 +9,7 @@ import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.cache.FileCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
+import java.io.File
 
 /**
  * Created by gaoyufei on 2017/5/31.
@@ -19,7 +20,7 @@ object Vincent{
     var dispatcher:Dispatcher? = null
     val keyGenerator = HashCodeGenerator()
     val memoryCache = MemoryCacheManager(1024 * 10)
-    var fileCache:CacheManager<CacheSeed>? = null
+    var fileCache:CacheManager<File>? = null
 
     fun with(context:Context):Builder{
         if(fileCache == null){

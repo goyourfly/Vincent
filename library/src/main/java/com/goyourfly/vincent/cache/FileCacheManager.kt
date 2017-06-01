@@ -11,39 +11,23 @@ import java.io.FileOutputStream
  * Created by gaoyufei on 2017/6/1.
  */
 
-class FileCacheManager(val size:Int,val path:String):CacheManager<CacheSeed>{
+class FileCacheManager(val size:Int,val path:String):CacheManager<File>{
 
-    override fun set(key: String, value: CacheSeed) {
+    override fun set(key: String, value: File) {
         val file = getFile(key)
         checkFile(file)
-        var fileOutputStream:FileOutputStream? = null
-        try {
-            fileOutputStream = FileOutputStream(file)
-            value.value?.compress(Bitmap.CompressFormat.JPEG,70,fileOutputStream)
-        }catch (e:FileNotFoundException){
-            e.printStackTrace()
-        }finally {
-            fileOutputStream?.close()
-        }
     }
 
-    override fun get(key: String): CacheSeed {
-        return CacheSeed(key,DecodeManager.decode(getFile(key)))
-    }
+    override fun get(key: String) = getFile(key)
 
     override fun contain(key: String): Boolean {
         return getFile(key).exists()
     }
 
-    override fun delete(key: String): CacheSeed {
+    override fun delete(key: String): File {
         val file = getFile(key)
         file.delete()
-        return CacheSeed(key,null)
-    }
-
-    override fun update(key: String, value: CacheSeed) {
-        delete(key)
-        set(key,value)
+        return file
     }
 
     override fun clear() {
