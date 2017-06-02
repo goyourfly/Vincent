@@ -1,37 +1,45 @@
 package com.goyourfly.vincent.cache
 
+import android.graphics.Bitmap
 import android.util.LruCache
+import com.goyourfly.vincent.common.byteSize
 import com.goyourfly.vincent.common.logD
 
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class MemoryCacheManager(cacheSize:Int):CacheManager<CacheSeed>{
+class MemoryCacheManager(cacheSize:Int):CacheManager<Bitmap>{
 
-    val TAG = "MemoryCacheManager"
-    val lruCache:LruCache<String,CacheSeed> = LruCache(cacheSize)
+    val lruCache:LruCache<String,Bitmap> = MyLruCache(cacheSize)
 
     override fun contain(key: String): Boolean {
         return lruCache.get(key) != null
     }
-    override fun set(key: String, value: CacheSeed) {
+    override fun set(key: String, value: Bitmap) {
         lruCache.put(key,value)
-        "set:$key=$value".logD(TAG)
+        "set:$key=$value".logD()
     }
 
-    override fun get(key: String):CacheSeed {
-        "get:key=$key".logD(TAG)
+    override fun get(key: String):Bitmap {
+        "get:key=$key,size:${lruCache.size()}/${lruCache.maxSize()}".logD()
         return lruCache.get(key)
     }
 
-    override fun delete(key: String):CacheSeed {
-        "delete:key=$key".logD(TAG)
+    override fun delete(key: String):Bitmap {
+        "delete:key=$key".logD()
         return lruCache.remove(key)
     }
 
     override fun clear() {
-        "clear------------>>>".logD(TAG)
+        "clear------------>>>".logD()
         lruCache.evictAll()
     }
 
+    class MyLruCache(maxSize:Int):LruCache<String,Bitmap>(maxSize){
+        override fun sizeOf(key: String?, value: Bitmap?): Int {
+            if(value == null)
+                return 0
+            return value.byteSize()
+        }
+    }
 }

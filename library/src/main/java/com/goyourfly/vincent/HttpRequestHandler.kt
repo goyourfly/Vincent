@@ -14,39 +14,40 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.Okio
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.net.URL
 import java.util.concurrent.TimeUnit
 
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class OkHttpRequestHandler(val fileCacheManager: CacheManager<File>):RequestHandler<File>() {
-
-    val client = OkHttpClient.Builder()
-            .connectTimeout(10,TimeUnit.SECONDS)
-            .writeTimeout(10,TimeUnit.SECONDS)
-            .readTimeout(30,TimeUnit.SECONDS)
-            .build()
-
-
+class HttpRequestHandler(val fileCacheManager: CacheManager<File>):RequestHandler<File>() {
     @Throws(IOException::class,NetworkErrorException::class)
     override fun fetchSync(key:String,uri: Uri): File? {
-        "OkHttpRequestHandlerStart:${uri.toString()}".logD()
-        val request = Request.Builder()
-                .url(uri.toString())
-                .build()
+        "HttpRequestHandlerStart:${uri.toString()}".logD()
         fileCacheManager.delete(key)
         val file = fileCacheManager.get(key)
         fileCacheManager.set(key,file)
-        val response = client.newCall(request).execute()
-        if (!response.isSuccessful) {
-            response.body()?.close()
-            throw NetworkErrorException("Download file error:${response.code()}")
+
+        val url = URL(uri.toString())
+        val con = url.openConnection()
+        val inputStream = con.getInputStream()
+
+        val bs = ByteArray(1024)
+        val outputStream = FileOutputStream(file)
+        var len = 0
+        while(true){
+            len = inputStream.read(bs)
+            if(len == -1){
+                break
+            }
+            outputStream.write(bs)
         }
-        val buffer = Okio.buffer(Okio.sink(file))
-        buffer.writeAll(response.body()?.source())
-        buffer.close()
-        "OkHttpRequestHandlerResponse:${file.absolutePath}".logD()
+
+        outputStream.close()
+        inputStream.close()
+        "HttpRequestHandlerResponse:${file.absolutePath}".logD()
         return file
     }
 }

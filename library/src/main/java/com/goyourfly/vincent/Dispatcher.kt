@@ -1,6 +1,7 @@
 package com.goyourfly.vincent
 
 import android.accounts.NetworkErrorException
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
@@ -18,7 +19,7 @@ import java.util.concurrent.*
  *
  */
 class Dispatcher(val keyGenerator: KeyGenerator,
-                 val memoryCache: CacheManager<CacheSeed>,
+                 val memoryCache: CacheManager<Bitmap>,
                  val fileCache: CacheManager<File>) {
 
     object What {
@@ -42,7 +43,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     val executor = Executors.newFixedThreadPool(4)
     val executorBitmap = Executors.newSingleThreadExecutor()
     val executorManager = ConcurrentHashMap<String, RequestInfo>()
-    val networkHandler = OkHttpRequestHandler(fileCache)
+    val networkHandler = HttpRequestHandler(fileCache)
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
@@ -72,7 +73,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                             val executorBitmap: ExecutorService,
                             val executorManager: ConcurrentHashMap<String, RequestInfo>,
                             val networkHandler: RequestHandler<File>,
-                            val memoryCache: CacheManager<CacheSeed>,
+                            val memoryCache: CacheManager<Bitmap>,
                             val fileCache: CacheManager<File>,
                             val handlerMain: Handler) : Handler(looper) {
         override fun handleMessage(msg: Message?) {
@@ -118,7 +119,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                     val key = msg.obj as String
                     if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.remove(key)!!
-                        val bitmap = memoryCache.get(requestInfo.keyForCache).value
+                        val bitmap = memoryCache.get(requestInfo.keyForCache)
                         if (bitmap != null) {
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
                         }
@@ -132,7 +133,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                         val bitmap = requestInfo?.future?.get()
                         if (bitmap != null) {
                             "handleMsg:7 set image".logD()
-                            memoryCache.set(requestInfo.keyForCache, CacheSeed(key, bitmap))
+                            memoryCache.set(requestInfo.keyForCache, bitmap)
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
                         }
                     }

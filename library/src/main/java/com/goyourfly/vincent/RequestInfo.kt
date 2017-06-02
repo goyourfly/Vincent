@@ -21,7 +21,13 @@ data class RequestInfo(
         val errorId:Int,
         val keyGenerator: KeyGenerator){
 
+    /**
+     * 这个ID绑定了url和target，保证了完全的唯一
+     */
     val key:String by lazy { keyGenerator.generate(uri.toString(),target) }
+    /**
+     * 这个ID只绑定url，没有区别target
+     */
     val keyForCache:String = keyGenerator.generate(uri.toString())
     var future:Future<Bitmap>? = null
 

@@ -2,14 +2,14 @@ package com.goyourfly.vincent.app
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.StaggeredGridLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.goyourfly.vincent.Vincent
+import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
     val recycler:RecyclerView by lazy {
@@ -21,9 +21,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         recycler.adapter = adapter
-        recycler.layoutManager = StaggeredGridLayoutManager(3,StaggeredGridLayoutManager.VERTICAL)
+//        recycler.layoutManager = StaggeredGridLayoutManager(3,StaggeredGridLayoutManager.VERTICAL)
+        recycler.layoutManager = GridLayoutManager(this,3)
 
-        for (str in Data.URLS){
+        for (str in Data.URLS2){
             adapter.addItem(str)
         }
         adapter.notifyItemRangeInserted(0,adapter.itemCount)
@@ -43,7 +44,9 @@ class MainActivity : AppCompatActivity() {
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.loading_error)
                     .into(p0.image)
-
+//            Picasso.with(p0.image.context)
+//                    .load(list.get(p1))
+//                    .into(p0.image)
         }
 
         override fun getItemCount(): Int {

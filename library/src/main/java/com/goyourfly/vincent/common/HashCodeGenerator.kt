@@ -14,6 +14,6 @@ class HashCodeGenerator:KeyGenerator{
         return "$prefix-${str.hashCode()}-${target.targetId}"
     }
     override fun generate(str: String): String {
-        return "$prefix-${str.hashCode()}"
+        return "$prefix-${str.hashCode()}.jpg"
     }
 }
