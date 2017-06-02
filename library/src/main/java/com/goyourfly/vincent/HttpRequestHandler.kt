@@ -16,6 +16,7 @@ import okio.Okio
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
 
@@ -23,6 +24,7 @@ import java.util.concurrent.TimeUnit
  * Created by gaoyufei on 2017/5/31.
  */
 class HttpRequestHandler(val fileCacheManager: CacheManager<File>):RequestHandler<File>() {
+    val TIMEOUT = 10 * 1000
     @Throws(IOException::class,NetworkErrorException::class)
     override fun fetchSync(key:String,uri: Uri): File? {
         "HttpRequestHandlerStart:${uri.toString()}".logD()
@@ -31,18 +33,21 @@ class HttpRequestHandler(val fileCacheManager: CacheManager<File>):RequestHandle
         fileCacheManager.set(key,file)
 
         val url = URL(uri.toString())
-        val con = url.openConnection()
+        val con:HttpURLConnection = url.openConnection() as HttpURLConnection
+        con.connectTimeout = TIMEOUT
+        con.requestMethod = "GET"
+        if(con.responseCode != HttpURLConnection.HTTP_OK)
+            throw NetworkErrorException("Download file error:${con.responseCode}")
         val inputStream = con.getInputStream()
 
         val bs = ByteArray(1024)
         val outputStream = FileOutputStream(file)
-        var len = 0
         while(true){
-            len = inputStream.read(bs)
+            val len = inputStream.read(bs)
             if(len == -1){
                 break
             }
-            outputStream.write(bs)
+            outputStream.write(bs,0,len)
         }
 
         outputStream.close()
