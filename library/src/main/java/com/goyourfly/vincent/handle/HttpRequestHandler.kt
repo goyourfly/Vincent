@@ -34,12 +34,12 @@ class HttpRequestHandler(val fileCacheManager: CacheManager<File>): RequestHandl
         var inputStream: InputStream? = null
         var outputStream: OutputStream? = null
         try {
-            inputStream = con.getInputStream()
-            val bs = ByteArray(1024)
-
             fileCacheManager.delete(key)
-            val file = fileCacheManager.get(key)
+            val file = fileCacheManager.get(key) ?: return null
             fileCacheManager.set(key,file)
+
+            inputStream = con.inputStream
+            val bs = ByteArray(1024)
 
             outputStream = FileOutputStream(file)
             while(true){

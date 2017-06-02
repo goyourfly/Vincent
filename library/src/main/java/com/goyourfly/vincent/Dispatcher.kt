@@ -94,6 +94,12 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                 What.SUBMIT -> {
                     val requestInfo = msg.obj as RequestInfo
                     val key = requestInfo.key
+                    if(executorManager.containsKey(key)){
+                        // 判断如果当前有相同的任务，则取消当前任务
+                        val requestInfoOld = executorManager.get(key)
+                        requestInfoOld?.future?.cancel(true)
+                        executorManager.remove(key)
+                    }
                     executorManager.put(key, requestInfo)
                     // 首先判断内存的缓存中是否存在该图片
                     if (memoryCache.contain(requestInfo.keyForCache)) {
@@ -122,7 +128,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                     if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.get(key)!!
                         //TODO 判断本地文件系统是否缓存该图
-                        val file = fileCache.get(requestInfo.keyForCache)
+                        val file = fileCache.get(requestInfo.keyForCache)!!
                         requestInfo.future = executorBitmap.submit(RunBitmapMaker(this, key, file))
                     }
                 }

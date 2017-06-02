@@ -62,6 +62,10 @@ final class Data {
           ,"http://img4.imgtn.bdimg.com/it/u=3308202184,1335873496&fm=26&gp=0.jpg"
           ,"http://img2.imgtn.bdimg.com/it/u=790136929,2931538723&fm=26&gp=0.jpg"
           , Environment.getExternalStorageDirectory()+"/Download/1492413389201.jpg"
+          , Environment.getExternalStorageDirectory()+"/Download/1.sm.webp"
+          , Environment.getExternalStorageDirectory()+"/Download/2.sm.webp"
+          ,"https://www.gstatic.com/webp/gallery/1.sm.webp"
+          ,"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1496401030623&di=e2cc31d08700e27dd409bc20222b6bd5&imgtype=0&src=http%3A%2F%2Fc.hiphotos.baidu.com%2Fzhidao%2Fwh%253D450%252C600%2Fsign%3D33e67285d343ad4ba67b4ec4b7327699%2F574e9258d109b3de76576b48cebf6c81800a4c22.jpg"
   };
 
   private Data() {

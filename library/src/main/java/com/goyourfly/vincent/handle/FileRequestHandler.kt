@@ -21,7 +21,7 @@ class FileRequestHandler(val fileCacheManager: CacheManager<File>) : RequestHand
     override fun fetchSync(key: String, uri: Uri): File? {
         "FileRequestHandler:uri:${uri.path}".logD()
         fileCacheManager.delete(key)
-        val fileTo = fileCacheManager.get(key)
+        val fileTo = fileCacheManager.get(key) ?: return null
         fileCacheManager.set(key, fileTo)
         val fileFrom = File(uri.path)
         var input:FileInputStream? = null

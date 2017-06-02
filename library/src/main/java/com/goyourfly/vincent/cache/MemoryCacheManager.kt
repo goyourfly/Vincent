@@ -20,12 +20,12 @@ class MemoryCacheManager(cacheSize:Int):CacheManager<Bitmap>{
         "set:$key=$value".logD()
     }
 
-    override fun get(key: String):Bitmap {
+    override fun get(key: String):Bitmap? {
         "get:key=$key,size:${lruCache.size()}/${lruCache.maxSize()}".logD()
         return lruCache.get(key)
     }
 
-    override fun delete(key: String):Bitmap {
+    override fun delete(key: String):Bitmap? {
         "delete:key=$key".logD()
         return lruCache.remove(key)
     }
