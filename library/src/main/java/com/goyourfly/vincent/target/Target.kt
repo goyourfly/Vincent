@@ -1,4 +1,4 @@
-package com.goyourfly.vincent
+package com.goyourfly.vincent.target
 
 import android.graphics.Bitmap
 import java.util.*

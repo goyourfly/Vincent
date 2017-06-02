@@ -2,7 +2,7 @@ package com.goyourfly.vincent
 
 import android.os.Handler
 import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.common.logE
+import com.goyourfly.vincent.handle.RequestHandler
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.Callable
@@ -12,10 +12,14 @@ import java.util.concurrent.Callable
  */
 
 class RunFileDownloader(val handler:Handler,
-                        val requestHandler: RequestHandler<File>,
+                        val requestHandler: RequestHandler<File>?,
                         val requestInfo: RequestInfo):Callable<File>{
     override fun call(): File? {
         "start download file".logD()
+        if(requestHandler == null) {
+            errorHandle()
+            return null
+        }
         try {
             val file = requestHandler.fetchSync(requestInfo.keyForCache,requestInfo.uri)
             if(file == null){
@@ -30,10 +34,14 @@ class RunFileDownloader(val handler:Handler,
             return file
         }catch (e: Exception){
             e.printStackTrace()
-            val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_ERROR)
-            msg.obj = requestInfo.key
-            handler.sendMessage(msg)
+            errorHandle()
             return null
         }
+    }
+
+    fun errorHandle(){
+        val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_ERROR)
+        msg.obj = requestInfo.key
+        handler.sendMessage(msg)
     }
 }

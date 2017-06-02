@@ -8,9 +8,12 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import com.goyourfly.vincent.cache.CacheManager
-import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.handle.FileRequestHandler
+import com.goyourfly.vincent.handle.HttpRequestHandler
+import com.goyourfly.vincent.handle.RequestHandler
+import com.goyourfly.vincent.target.Target
 import java.io.File
 import java.util.concurrent.*
 
@@ -43,7 +46,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     val executor = Executors.newFixedThreadPool(4)
     val executorBitmap = Executors.newSingleThreadExecutor()
     val executorManager = ConcurrentHashMap<String, RequestInfo>()
-    val networkHandler = HttpRequestHandler(fileCache)
+    val networkHandler = arrayListOf<RequestHandler<File>>(HttpRequestHandler(fileCache),FileRequestHandler(fileCache))
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
@@ -72,10 +75,19 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                             val executor: ExecutorService,
                             val executorBitmap: ExecutorService,
                             val executorManager: ConcurrentHashMap<String, RequestInfo>,
-                            val networkHandler: RequestHandler<File>,
+                            val networkHandler: ArrayList<RequestHandler<File>>,
                             val memoryCache: CacheManager<Bitmap>,
                             val fileCache: CacheManager<File>,
                             val handlerMain: Handler) : Handler(looper) {
+
+        fun  getRequestHandler(uri:Uri):RequestHandler<File>?{
+            for (requestHandler in networkHandler){
+                if(requestHandler.canHandle(uri))
+                    return requestHandler
+            }
+            return null
+        }
+
         override fun handleMessage(msg: Message) {
             "handleMsg:${msg.what} + ${msg.obj}".logD()
             when (msg.what) {
@@ -93,7 +105,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
                         return
                     }
-                    executor.submit(RunFileDownloader(this, networkHandler, requestInfo))
+                    executor.submit(RunFileDownloader(this, getRequestHandler(requestInfo.uri), requestInfo))
                 }
 
                 What.CANCEL -> {

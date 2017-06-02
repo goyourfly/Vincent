@@ -1,5 +1,5 @@
 package com.goyourfly.vincent.common
-import com.goyourfly.vincent.Target
+import com.goyourfly.vincent.target.Target
 
 /**
  * Created by gaoyufei on 2017/5/31.
@@ -7,7 +7,7 @@ import com.goyourfly.vincent.Target
 class HashCodeGenerator:KeyGenerator{
 
     val prefix = "Vincent"
-    override fun generate(str: String,target:Target): String {
+    override fun generate(str: String,target: Target): String {
         if(str.trim().isEmpty()){
             throw NullPointerException("input str should not null")
         }

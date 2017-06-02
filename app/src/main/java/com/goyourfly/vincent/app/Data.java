@@ -1,5 +1,7 @@
 package com.goyourfly.vincent.app;
 
+import android.os.Environment;
+
 final class Data {
   static final String BASE = "http://i.imgur.com/";
   static final String EXT = ".jpg";
@@ -59,6 +61,7 @@ final class Data {
           ,"http://img3.imgtn.bdimg.com/it/u=2475936457,313943810&fm=26&gp=0.jpg"
           ,"http://img4.imgtn.bdimg.com/it/u=3308202184,1335873496&fm=26&gp=0.jpg"
           ,"http://img2.imgtn.bdimg.com/it/u=790136929,2931538723&fm=26&gp=0.jpg"
+          , Environment.getExternalStorageDirectory()+"/Download/1492413389201.jpg"
   };
 
   private Data() {

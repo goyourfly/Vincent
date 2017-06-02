@@ -10,15 +10,8 @@ import java.io.InputStream
 
 interface BitmapDecoder {
 
-    fun decode(stream: InputStream):Bitmap?
-
-    fun decode(bytes: ByteArray):Bitmap?
 
     fun decode(file:File):Bitmap?
-
-    fun canDecode(stream: InputStream):Boolean
-
-    fun canDecode(bytes: ByteArray):Boolean
 
     fun canDecode(file: File):Boolean
 }

@@ -1,13 +1,13 @@
-package com.goyourfly.vincent
+package com.goyourfly.vincent.target
 
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.widget.ImageView
+import com.goyourfly.vincent.target.BitmapTarget
 
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class ImageTarget(val imageView: ImageView,val placeholderId:Int,val errorId:Int): BitmapTarget() {
+class ImageTarget(val imageView: ImageView, val placeholderId:Int, val errorId:Int): BitmapTarget() {
 
     init {
         imageView.setImageResource(placeholderId)

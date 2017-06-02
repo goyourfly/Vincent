@@ -5,10 +5,13 @@ import android.net.Uri
 import android.text.TextUtils
 import android.widget.ImageView
 import com.goyourfly.vincent.cache.CacheManager
-import com.goyourfly.vincent.cache.CacheSeed
 import com.goyourfly.vincent.cache.FileCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
+import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.target.BitmapTarget
+import com.goyourfly.vincent.target.ImageTarget
+import com.goyourfly.vincent.target.Target
 import java.io.File
 
 /**
@@ -57,7 +60,7 @@ object Vincent{
         /**
          * the target for image
          */
-        var target:Target = BitmapTarget()
+        var target: Target = BitmapTarget()
         /**
          * placeholder res id
          */
@@ -95,9 +98,23 @@ object Vincent{
         }
 
         fun load(path:String):Builder{
-            if(TextUtils.isEmpty(path))
+            if(TextUtils.isEmpty(path)){
+                "Path is empty".logD()
                 return this
-            uri = Uri.parse(path)
+            }
+            val file = File(path)
+            if(file.exists()){
+                return load(file)
+            }
+            return load(Uri.parse(path))
+        }
+
+        fun load(file:File):Builder{
+            return load(Uri.fromFile(file))
+        }
+
+        fun load(uri: Uri):Builder{
+            this.uri = uri
             return this
         }
 
@@ -123,7 +140,7 @@ object Vincent{
             return this
         }
 
-        fun into(target:Target){
+        fun into(target: Target){
             this.target = target
             val requestInfo = RequestInfo(
                     uri,
