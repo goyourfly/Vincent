@@ -76,9 +76,9 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                             val memoryCache: CacheManager<Bitmap>,
                             val fileCache: CacheManager<File>,
                             val handlerMain: Handler) : Handler(looper) {
-        override fun handleMessage(msg: Message?) {
-            "handleMsg:${msg?.what} + ${msg?.obj}".logD()
-            when (msg?.what) {
+        override fun handleMessage(msg: Message) {
+            "handleMsg:${msg.what} + ${msg.obj}".logD()
+            when (msg.what) {
                 What.SUBMIT -> {
                     val requestInfo = msg.obj as RequestInfo
                     val key = requestInfo.key
@@ -139,7 +139,8 @@ class Dispatcher(val keyGenerator: KeyGenerator,
                     }
                 }
 
-                What.FILE_LOAD_ERROR or What.DOWNLOAD_ERROR -> {
+
+                else -> {
                     val key = msg.obj as String
                     if (executorManager.containsKey(key)) {
                         val requestInfo = executorManager.remove(key)

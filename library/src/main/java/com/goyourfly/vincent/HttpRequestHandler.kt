@@ -13,9 +13,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okio.Okio
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.TimeUnit
@@ -28,31 +26,47 @@ class HttpRequestHandler(val fileCacheManager: CacheManager<File>):RequestHandle
     @Throws(IOException::class,NetworkErrorException::class)
     override fun fetchSync(key:String,uri: Uri): File? {
         "HttpRequestHandlerStart:${uri.toString()}".logD()
-        fileCacheManager.delete(key)
-        val file = fileCacheManager.get(key)
-        fileCacheManager.set(key,file)
 
         val url = URL(uri.toString())
         val con:HttpURLConnection = url.openConnection() as HttpURLConnection
         con.connectTimeout = TIMEOUT
         con.requestMethod = "GET"
-        if(con.responseCode != HttpURLConnection.HTTP_OK)
-            throw NetworkErrorException("Download file error:${con.responseCode}")
-        val inputStream = con.getInputStream()
-
-        val bs = ByteArray(1024)
-        val outputStream = FileOutputStream(file)
-        while(true){
-            val len = inputStream.read(bs)
-            if(len == -1){
-                break
-            }
-            outputStream.write(bs,0,len)
+        if(con.responseCode != HttpURLConnection.HTTP_OK){
+            fileCacheManager.delete(key)
+            return null
         }
 
-        outputStream.close()
-        inputStream.close()
-        "HttpRequestHandlerResponse:${file.absolutePath}".logD()
-        return file
+        var inputStream:InputStream? = null
+        var outputStream:OutputStream? = null
+        try {
+            inputStream = con.getInputStream()
+            val bs = ByteArray(1024)
+
+            fileCacheManager.delete(key)
+            val file = fileCacheManager.get(key)
+            fileCacheManager.set(key,file)
+
+            outputStream = FileOutputStream(file)
+            while(true){
+                val len = inputStream.read(bs)
+                if(len == -1){
+                    break
+                }
+                outputStream.write(bs,0,len)
+            }
+            outputStream.close()
+            inputStream.close()
+            "HttpRequestHandlerResponse:${uri.toString()},file:${file.absolutePath}".logD()
+            if(file.length() < 10L){
+                fileCacheManager.delete(key)
+                return null
+            }
+            return file
+        }catch (e:IOException){
+            fileCacheManager.delete(key)
+            outputStream?.close()
+            inputStream?.close()
+            return null
+        }
     }
 }

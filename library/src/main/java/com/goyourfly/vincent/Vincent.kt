@@ -19,7 +19,7 @@ import java.io.File
 object Vincent{
     var dispatcher:Dispatcher? = null
     val keyGenerator = HashCodeGenerator()
-    val memoryCache = MemoryCacheManager(1024 * 1024 * 20)
+    val memoryCache = MemoryCacheManager(1024 * 1024 * 2)
     var fileCache:CacheManager<File>? = null
 
     fun with(context:Context):Builder{
