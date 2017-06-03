@@ -15,5 +15,7 @@ interface CacheManager<T>{
 
     fun clear();
 
+    fun count():Int;
+
     fun trimToSize();
 }

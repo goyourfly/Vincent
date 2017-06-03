@@ -16,10 +16,12 @@ class SingleImageActivity : AppCompatActivity() {
 
         findViewById(R.id.reload).setOnClickListener {
             Vincent.with(this)
-                    .load("http://i.imgur.com/CqmBjo5.jpg")
+//                    .load("http://i.imgur.com/CqmBjo5.jpg")
+                    .load("https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2716425886,2705799946&fm=26&gp=0.jpg")
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.loading_error)
                     .into(image)
         }
+
     }
 }

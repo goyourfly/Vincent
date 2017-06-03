@@ -1,19 +1,17 @@
 package com.goyourfly.vincent
 
 import android.accounts.NetworkErrorException
-import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import com.goyourfly.vincent.cache.CacheManager
-import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.handle.FileRequestHandler
 import com.goyourfly.vincent.handle.HttpRequestHandler
 import com.goyourfly.vincent.handle.RequestHandler
-import com.goyourfly.vincent.target.Target
 import java.io.File
 import java.util.concurrent.*
 
@@ -21,7 +19,7 @@ import java.util.concurrent.*
  * Created by gaoyufei on 2017/5/31.
  *
  */
-class Dispatcher(val memoryCache: CacheManager<Bitmap>,
+class Dispatcher(val memoryCache: CacheManager<Drawable>,
                  val fileCache: CacheManager<File>) {
 
     object What {
@@ -92,7 +90,7 @@ class Dispatcher(val memoryCache: CacheManager<Bitmap>,
                             val executorBitmap: ExecutorService,
                             val taskManager: TaskManager,
                             val networkHandler: ArrayList<RequestHandler<File>>,
-                            val memoryCache: CacheManager<Bitmap>,
+                            val memoryCache: CacheManager<Drawable>,
                             val fileCache: CacheManager<File>,
                             val handlerMain: Handler) : Handler(looper) {
 
@@ -159,7 +157,7 @@ class Dispatcher(val memoryCache: CacheManager<Bitmap>,
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.get(key)!!
                         val file = fileCache.get(requestInfo.keyForCache)!!
-                        requestInfo.future = executorBitmap.submit(RunBitmapMaker(this, key, file))
+                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file))
                     }
                 }
 

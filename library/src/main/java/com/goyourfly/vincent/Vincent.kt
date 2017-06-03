@@ -2,6 +2,7 @@ package com.goyourfly.vincent
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.TextUtils
 import android.widget.ImageView
@@ -10,7 +11,6 @@ import com.goyourfly.vincent.cache.FileCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
 import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.target.BitmapTarget
 import com.goyourfly.vincent.target.ImageTarget
 import com.goyourfly.vincent.target.Target
 import java.io.File
@@ -22,7 +22,7 @@ import java.io.File
  */
 object Vincent{
     var dispatcher:Dispatcher? = null
-    var memoryCache:CacheManager<Bitmap>? = null
+    var memoryCache:CacheManager<Drawable>? = null
     var fileCache:CacheManager<File>? = null
 
     fun with(context:Context):Builder{
@@ -59,7 +59,7 @@ object Vincent{
         /**
          * the target for image
          */
-        var target: Target = BitmapTarget()
+        var target: Target = Target()
         /**
          * placeholder res id
          */

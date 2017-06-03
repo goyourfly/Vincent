@@ -1,6 +1,7 @@
 package com.goyourfly.vincent
 
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.target.Target
@@ -29,10 +30,10 @@ data class RequestContext(
     /**
      * 这个ID只绑定url，没有区别target
      */
-    val keyForCache:String = keyGenerator.generate(uri.toString())
+    val keyForCache:String = keyGenerator.generate(uri.toString(),target.getId())
 
     var futureDownload:Future<File>? = null
-    var future:Future<Bitmap>? = null
+    var future:Future<Drawable>? = null
 
     fun cancel(){
         futureDownload?.cancel(true)

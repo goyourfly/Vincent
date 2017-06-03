@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 //        recycler.layoutManager = StaggeredGridLayoutManager(3,StaggeredGridLayoutManager.VERTICAL)
         recycler.layoutManager = GridLayoutManager(this,3)
 
-        for (str in Data.URLS){
+        for (str in Data.URLS_GIF){
             adapter.addItem(str)
         }
         adapter.notifyItemRangeInserted(0,adapter.itemCount)

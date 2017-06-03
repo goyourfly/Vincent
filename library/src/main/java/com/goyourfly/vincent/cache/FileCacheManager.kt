@@ -8,6 +8,12 @@ import java.io.File
  */
 
 class FileCacheManager(val maxSize: Int, val path: String) : CacheManager<File> {
+    override fun count():Int {
+        val file = File(path)
+        val childFiles = file.listFiles() ?: return 0
+        return childFiles.size
+    }
+
     override fun set(key: String, value: File) {
         val file = getFile(key)
         checkFile(file)

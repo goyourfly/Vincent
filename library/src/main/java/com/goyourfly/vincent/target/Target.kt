@@ -1,6 +1,7 @@
 package com.goyourfly.vincent.target
 
 import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import java.util.*
 
 /**
@@ -12,7 +13,7 @@ open class Target{
 
     fun getId() = targetId
 
-    open fun onComplete(bitmap: Bitmap){}
+    open fun onComplete(drawable: Drawable){}
 
     open fun onError(e:Exception){}
 
