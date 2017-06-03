@@ -4,6 +4,7 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +25,7 @@ class MainActivity : AppCompatActivity() {
 //        recycler.layoutManager = StaggeredGridLayoutManager(3,StaggeredGridLayoutManager.VERTICAL)
         recycler.layoutManager = GridLayoutManager(this,3)
 
-        for (str in Data.URLS2){
+        for (str in Data.URLS){
             adapter.addItem(str)
         }
         adapter.notifyItemRangeInserted(0,adapter.itemCount)
@@ -47,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 //            Picasso.with(p0.image.context)
 //                    .load(list.get(p1))
 //                    .into(p0.image)
+            Log.d("MainActivity","------Target id>>:${p0.image.hashCode()}");
         }
 
         override fun getItemCount(): Int {
@@ -54,7 +56,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onCreateViewHolder(p0: ViewGroup?, p1: Int): ViewHolder {
-            return ViewHolder(LayoutInflater.from(p0?.context).inflate(R.layout.item_img,p0,false))
+            val view =  ViewHolder(LayoutInflater.from(p0?.context).inflate(R.layout.item_img,p0,false))
+//            Log.d("TaskManager","ViewCount:" + p0?.childCount + ",id:" + view.hashCode())
+            return view
         }
 
         class ViewHolder(view:View): RecyclerView.ViewHolder(view) {

@@ -13,7 +13,7 @@ import java.util.concurrent.Callable
 
 class RunFileDownloader(val handler:Handler,
                         val requestHandler: RequestHandler<File>?,
-                        val requestInfo: RequestInfo):Callable<File>{
+                        val requestContext: RequestContext):Callable<File>{
     override fun call(): File? {
         "start download file".logD()
         if(requestHandler == null) {
@@ -21,14 +21,14 @@ class RunFileDownloader(val handler:Handler,
             return null
         }
         try {
-            val file = requestHandler.fetchSync(requestInfo.keyForCache,requestInfo.uri)
+            val file = requestHandler.fetchSync(requestContext.keyForCache, requestContext.uri)
             if(file == null){
-                throw FileNotFoundException("File not found")
+                throw FileNotFoundException("File not found:${requestContext.uri.toString()},${file}")
             }else if(file.length() == 0L){
                 throw FileNotFoundException("File length is 0")
             }
             val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_FINISH)
-            msg.obj = requestInfo.key
+            msg.obj = requestContext.key
             handler.sendMessage(msg)
             "end download file".logD()
             return file
@@ -41,7 +41,7 @@ class RunFileDownloader(val handler:Handler,
 
     fun errorHandle(){
         val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_ERROR)
-        msg.obj = requestInfo.key
+        msg.obj = requestContext.key
         handler.sendMessage(msg)
     }
 }

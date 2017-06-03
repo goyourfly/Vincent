@@ -10,6 +10,7 @@ import com.goyourfly.vincent.target.BitmapTarget
 class ImageTarget(val imageView: ImageView, val placeholderId:Int, val errorId:Int): BitmapTarget() {
 
     init {
+        targetId = imageView.hashCode().toString()
         imageView.setImageResource(placeholderId)
     }
 

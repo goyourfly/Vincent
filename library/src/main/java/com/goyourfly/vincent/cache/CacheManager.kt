@@ -14,4 +14,6 @@ interface CacheManager<T>{
     fun delete(key:String):T?
 
     fun clear();
+
+    fun trimToSize();
 }

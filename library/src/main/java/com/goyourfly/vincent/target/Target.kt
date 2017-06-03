@@ -8,7 +8,9 @@ import java.util.*
  */
 open class Target{
 
-    val targetId = UUID.randomUUID().toString()
+    protected var targetId = UUID.randomUUID().toString()
+
+    fun getId() = targetId
 
     open fun onComplete(bitmap: Bitmap){}
 
@@ -16,5 +18,14 @@ open class Target{
 
     override fun toString(): String {
         return targetId
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if(other == null)
+            return false
+        if(other is Target){
+            return targetId == other.getId()
+        }
+        return false
     }
 }

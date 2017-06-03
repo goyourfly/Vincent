@@ -1,6 +1,7 @@
 package com.goyourfly.vincent.cache
 
 import android.graphics.Bitmap
+import android.os.Build
 import android.util.LruCache
 import com.goyourfly.vincent.common.byteSize
 import com.goyourfly.vincent.common.logD
@@ -8,7 +9,7 @@ import com.goyourfly.vincent.common.logD
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class MemoryCacheManager(cacheSize:Int):CacheManager<Bitmap>{
+class MemoryCacheManager(val cacheSize:Int):CacheManager<Bitmap>{
 
     val lruCache:LruCache<String,Bitmap> = MyLruCache(cacheSize)
 
@@ -33,6 +34,12 @@ class MemoryCacheManager(cacheSize:Int):CacheManager<Bitmap>{
     override fun clear() {
         "clear------------>>>".logD()
         lruCache.evictAll()
+    }
+
+    override fun trimToSize() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            lruCache.trimToSize(cacheSize)
+        }
     }
 
     class MyLruCache(maxSize:Int):LruCache<String,Bitmap>(maxSize){

@@ -18,7 +18,7 @@ fun String.logD(tag: String) {
 
 fun String.logD(){
     if(isDebug)
-        Log.d("------------>",this)
+        Log.d("${Thread.currentThread().name}:------------>",this)
 }
 
 fun String.logE(){

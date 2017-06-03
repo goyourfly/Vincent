@@ -21,8 +21,7 @@ import java.util.concurrent.*
  * Created by gaoyufei on 2017/5/31.
  *
  */
-class Dispatcher(val keyGenerator: KeyGenerator,
-                 val memoryCache: CacheManager<Bitmap>,
+class Dispatcher(val memoryCache: CacheManager<Bitmap>,
                  val fileCache: CacheManager<File>) {
 
     object What {
@@ -36,6 +35,23 @@ class Dispatcher(val keyGenerator: KeyGenerator,
 
         val FILE_LOAD_COMPLETE = 7
         val FILE_LOAD_ERROR = 8
+        val TRIM_FILE_TO_SIZE = 9
+
+        fun getName(i:Int):String{
+            return  when (i){
+                SUBMIT -> "1:SUBMIT"
+                CANCEL -> "2:CANCEL"
+                DOWNLOAD_FINISH -> "4:DOWNLOAD_FINISH"
+                DOWNLOAD_ERROR -> "5:DOWNLOAD_ERROR"
+                MEMORY_LOAD_COMPLETE -> "6:MEMORY_LOAD_COMPLETE"
+                FILE_LOAD_COMPLETE -> "7:FILE_LOAD_COMPLETE"
+                FILE_LOAD_ERROR -> "8:FILE_LOAD_ERROR"
+                TRIM_FILE_TO_SIZE -> "9:TRIM_FILE_TO_SIZE"
+                else -> {
+                    "$i:UNKNOWN"
+                }
+            }
+        }
     }
 
     /**
@@ -43,9 +59,9 @@ class Dispatcher(val keyGenerator: KeyGenerator,
      * of Vincent called
      */
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
-    val executor = Executors.newFixedThreadPool(4)
+    val executor = Executors.newFixedThreadPool(3)
     val executorBitmap = Executors.newSingleThreadExecutor()
-    val executorManager = ConcurrentHashMap<String, RequestInfo>()
+    val executorManager = TaskManager()
     val networkHandler = arrayListOf<RequestHandler<File>>(HttpRequestHandler(fileCache),FileRequestHandler(fileCache))
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
@@ -74,7 +90,7 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     class DispatcherHandler(looper: Looper,
                             val executor: ExecutorService,
                             val executorBitmap: ExecutorService,
-                            val executorManager: ConcurrentHashMap<String, RequestInfo>,
+                            val taskManager: TaskManager,
                             val networkHandler: ArrayList<RequestHandler<File>>,
                             val memoryCache: CacheManager<Bitmap>,
                             val fileCache: CacheManager<File>,
@@ -89,45 +105,59 @@ class Dispatcher(val keyGenerator: KeyGenerator,
         }
 
         override fun handleMessage(msg: Message) {
-            "handleMsg:${msg.what} + ${msg.obj}".logD()
+            "Biu Biu, i receive a msg:${What.getName(msg.what)}".logD()
             when (msg.what) {
                 What.SUBMIT -> {
-                    val requestInfo = msg.obj as RequestInfo
+                    val requestInfo = msg.obj as RequestContext
                     val key = requestInfo.key
-                    if(executorManager.containsKey(key)){
-                        // 判断如果当前有相同的任务，则取消当前任务
-                        val requestInfoOld = executorManager.get(key)
-                        requestInfoOld?.future?.cancel(true)
-                        executorManager.remove(key)
+                    val targetId = requestInfo.target.getId()
+                    "Target id:$targetId".logD()
+                    if(taskManager.containsTargetId(targetId)){
+                        // 判断当前target是否有任务
+                        val requestInfoOld = taskManager.getByTargetId(targetId)
+                        if(requestInfoOld != null) {
+                            "Target[${targetId}] already have a task".logD()
+                            // 如果当前有任务，但是任务和之前的一致，则返回，让老任务继续
+                            if(requestInfoOld == requestInfo){
+                                return
+                            }
+                            "Target[$targetId] old task not equals new task, so cancel before".logD()
+                            // 否则，取消老任务，执行新的任务
+                            requestInfoOld.cancel()
+                            taskManager.removeByTargetId(targetId)
+                        }
                     }
-                    executorManager.put(key, requestInfo)
+                    taskManager.put(key, requestInfo)
                     // 首先判断内存的缓存中是否存在该图片
                     if (memoryCache.contain(requestInfo.keyForCache)) {
                         sendMessage(obtainMessage(What.MEMORY_LOAD_COMPLETE, key))
                         return
                     }
-                    // if local cache contain file
+                    // 判断本地文件系统是否有该图片
                     if (fileCache.contain(requestInfo.keyForCache)) {
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
                         return
                     }
-                    executor.submit(RunFileDownloader(this, getRequestHandler(requestInfo.uri), requestInfo))
+                    // 触发清空缓存
+                    removeMessages(What.TRIM_FILE_TO_SIZE)
+                    sendMessageDelayed(obtainMessage(What.TRIM_FILE_TO_SIZE),1000 * 5)
+                    // 如果都没有，去网络下载
+                    requestInfo.futureDownload = executor.submit(RunFileDownloader(this, getRequestHandler(requestInfo.uri), requestInfo))
                 }
 
                 What.CANCEL -> {
-                    val key = msg.obj as String
-                    if (executorManager.containsKey(key)) {
-                        val future = executorManager.remove(key)?.future
-                        future?.cancel(true)
+                    val targetId = msg.obj as String
+                    if (taskManager.containsTargetId(targetId)) {
+                        val requestInfo = taskManager.getByTargetId(targetId)
+                        requestInfo?.cancel()
                     }
                 }
 
 
                 What.DOWNLOAD_FINISH -> {
                     val key = msg.obj as String
-                    if (executorManager.containsKey(key)) {
-                        val requestInfo = executorManager.get(key)!!
-                        //TODO 判断本地文件系统是否缓存该图
+                    if (taskManager.containsKey(key)) {
+                        val requestInfo = taskManager.get(key)!!
                         val file = fileCache.get(requestInfo.keyForCache)!!
                         requestInfo.future = executorBitmap.submit(RunBitmapMaker(this, key, file))
                     }
@@ -135,8 +165,8 @@ class Dispatcher(val keyGenerator: KeyGenerator,
 
                 What.MEMORY_LOAD_COMPLETE -> {
                     val key = msg.obj as String
-                    if (executorManager.containsKey(key)) {
-                        val requestInfo = executorManager.remove(key)!!
+                    if (taskManager.containsKey(key)) {
+                        val requestInfo = taskManager.remove(key)!!
                         val bitmap = memoryCache.get(requestInfo.keyForCache)
                         if (bitmap != null) {
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
@@ -146,22 +176,30 @@ class Dispatcher(val keyGenerator: KeyGenerator,
 
                 What.FILE_LOAD_COMPLETE -> {
                     val key = msg.obj as String
-                    if (executorManager.containsKey(key)) {
-                        val requestInfo = executorManager.remove(key)
+                    if (taskManager.containsKey(key)) {
+                        val requestInfo = taskManager.remove(key)
                         val bitmap = requestInfo?.future?.get()
                         if (bitmap != null) {
-                            "handleMsg:7 set image".logD()
                             memoryCache.set(requestInfo.keyForCache, bitmap)
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
                         }
                     }
                 }
 
+                // 每10秒清空一次缓存
+                What.TRIM_FILE_TO_SIZE -> {
+                    // 如果当前有任务，不清空
+                    if(taskManager.size() == 0){
+                        fileCache.trimToSize()
+                    }else {
+                        sendMessageDelayed(obtainMessage(What.TRIM_FILE_TO_SIZE), 1000 * 5)
+                    }
+                }
 
                 else -> {
                     val key = msg.obj as String
-                    if (executorManager.containsKey(key)) {
-                        val requestInfo = executorManager.remove(key)
+                    if (taskManager.containsKey(key)) {
+                        val requestInfo = taskManager.remove(key)
                         handlerMain.post { requestInfo!!.target.onError(NetworkErrorException()) }
                     }
                 }
@@ -170,15 +208,15 @@ class Dispatcher(val keyGenerator: KeyGenerator,
     }
 
 
-    fun dispatchSubmit(requestInfo: RequestInfo) {
+    fun dispatchSubmit(requestContext: RequestContext) {
         val msg = handler?.obtainMessage(What.SUBMIT)
-        msg?.obj = requestInfo
+        msg?.obj = requestContext
         handler?.sendMessage(msg)
     }
 
-    fun dispatchCancel(uri: Uri, target: Target) {
+    fun dispatchCancel(targetId:String) {
         val msg = handler?.obtainMessage(What.CANCEL)
-        msg?.obj = keyGenerator.generate(uri.toString(), target)
+        msg?.obj = targetId
         handler?.sendMessage(msg)
     }
 

@@ -1,6 +1,7 @@
 package com.goyourfly.vincent
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.text.TextUtils
 import android.widget.ImageView
@@ -21,16 +22,18 @@ import java.io.File
  */
 object Vincent{
     var dispatcher:Dispatcher? = null
-    val keyGenerator = HashCodeGenerator()
-    val memoryCache = MemoryCacheManager(1024 * 1024 * 2)
+    var memoryCache:CacheManager<Bitmap>? = null
     var fileCache:CacheManager<File>? = null
 
     fun with(context:Context):Builder{
+        if(memoryCache == null){
+            memoryCache = MemoryCacheManager(1024 * 1024 * 8)
+        }
         if(fileCache == null){
-            fileCache = FileCacheManager(1024 * 1024 * 2,"data/data/${context.packageName}/vincent/cache/")
+            fileCache = FileCacheManager(1024 * 1024 * 20,"data/data/${context.packageName}/vincent/cache/")
         }
         if(dispatcher == null){
-            dispatcher = Dispatcher(keyGenerator, memoryCache, fileCache!!)
+            dispatcher = Dispatcher(memoryCache!!, fileCache!!)
         }
         return Builder(dispatcher!!)
     }
@@ -44,10 +47,6 @@ object Vincent{
          * img uri ,url/file_path
          */
         var uri:Uri = Uri.EMPTY
-        /**
-         * img smallImg url
-         */
-        var pre_uri:Uri = Uri.EMPTY
         /**
          * Resize image size
          */
@@ -118,13 +117,6 @@ object Vincent{
             return this
         }
 
-        fun preview(path:String):Builder{
-            if(TextUtils.isEmpty(path))
-                return this
-            pre_uri = Uri.parse(path)
-            return this
-        }
-
         fun scale(scale:Scale):Builder{
             this.scale = scale
             return this
@@ -142,9 +134,8 @@ object Vincent{
 
         fun into(target: Target){
             this.target = target
-            val requestInfo = RequestInfo(
+            val requestInfo = RequestContext(
                     uri,
-                    pre_uri,
                     resizeWidth,
                     resizeHeight,
                     scale,

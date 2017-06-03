@@ -1,16 +1,7 @@
 package com.goyourfly.vincent.cache
 
-import android.graphics.Bitmap
-import com.goyourfly.vincent.RequestInfo
 import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.common.logE
-import com.goyourfly.vincent.decoder.DecodeManager
 import java.io.File
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.util.*
-import kotlin.Comparator
-import kotlin.coroutines.experimental.EmptyCoroutineContext.plus
 
 /**
  * Created by gaoyufei on 2017/6/1.
@@ -18,7 +9,6 @@ import kotlin.coroutines.experimental.EmptyCoroutineContext.plus
 
 class FileCacheManager(val maxSize: Int, val path: String) : CacheManager<File> {
     override fun set(key: String, value: File) {
-        trimToSize(maxSize)
         val file = getFile(key)
         checkFile(file)
     }
@@ -46,33 +36,36 @@ class FileCacheManager(val maxSize: Int, val path: String) : CacheManager<File> 
         return File(path, key)
     }
 
-    fun checkFile(file: File) {
+    private fun checkFile(file: File) {
         if (!file.parentFile.exists())
             file.parentFile.mkdirs()
         if (!file.exists())
             file.createNewFile()
     }
 
-    fun trimToSize(maxSize: Int) {
+    override fun trimToSize() {
         var size = getSize()
 
         "TrimToSize:$size/$maxSize".logD()
         if (size < maxSize)
             return
         val file = File(path)
+        val files = file.listFiles()
+        var i = 0
         while (true) {
-            if (size < maxSize) {
+            if (size < maxSize || i > files.size - 1) {
                 break
             }
-            val files = file.listFiles()
             if(files != null
                     && files.isNotEmpty()){
-                files[0].delete()
-                "DeleteFile:$size/$maxSize,deleteFile:${files[0].absolutePath}".logD()
+                files[i].delete()
+                "DeleteFile:$size/$maxSize,deleteFile:${files[i].name},fileTime:${files[i].lastModified()}".logD()
             }
             size = getSize()
+            i++
         }
     }
+
 
     fun getSize(): Long {
         var size = 0L
@@ -84,5 +77,11 @@ class FileCacheManager(val maxSize: Int, val path: String) : CacheManager<File> 
             size += f.length()
         }
         return size
+    }
+
+    class FileComparator:Comparator<File>{
+        override fun compare(o1: File?, o2: File?): Int {
+            return o1!!.compareTo(o2)
+        }
     }
 }
