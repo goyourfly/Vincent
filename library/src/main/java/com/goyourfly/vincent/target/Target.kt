@@ -13,9 +13,11 @@ open class Target{
 
     fun getId() = targetId
 
+    open fun onInit(drawable: Drawable){}
+
     open fun onComplete(drawable: Drawable){}
 
-    open fun onError(e:Exception){}
+    open fun onError(drawable: Drawable,e:Exception){}
 
     override fun toString(): String {
         return targetId

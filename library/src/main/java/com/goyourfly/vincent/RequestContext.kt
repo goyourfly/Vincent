@@ -1,10 +1,14 @@
 package com.goyourfly.vincent
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import com.goyourfly.vincent.common.KeyGenerator
+import com.goyourfly.vincent.common.centerCrop
 import com.goyourfly.vincent.target.Target
+import com.goyourfly.vincent.transform.Transform
 import java.io.File
 import java.util.concurrent.Future
 
@@ -12,16 +16,19 @@ import java.util.concurrent.Future
  * Created by gaoyufei on 2017/5/31.
  */
 data class RequestContext(
+        val context: Context,
         val uri: Uri,
-        val resizeWidth:Int,
-        val resizeHeight:Int,
+        val fit:Boolean,
+        var resizeWidth:Int,
+        var resizeHeight:Int,
         val scale:Scale,
         val cache:Cache,
         val priority: Priority,
         val target: Target,
         val placeholderId:Int,
         val errorId:Int,
-        val keyGenerator: KeyGenerator){
+        val keyGenerator: KeyGenerator,
+        val transforms:ArrayList<Transform>){
 
     /**
      * 这个ID绑定了url和target，保证了完全的唯一
@@ -49,4 +56,8 @@ data class RequestContext(
         return false
     }
 
+    fun loadDrawable(id:Int):Drawable{
+        val drawable = context.resources.getDrawable(id)
+        return drawable
+    }
 }

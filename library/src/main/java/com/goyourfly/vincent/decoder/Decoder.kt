@@ -12,7 +12,12 @@ import java.io.InputStream
 interface Decoder {
 
 
-    fun decode(file:File):Drawable?
+    /**
+     * 如果宽高都为0，则不缩放图片
+     * 如果其中一个为0，则按比例缩放
+     * 如果都不为0，裁剪
+     */
+    fun decode(file:File,width:Int,height:Int):Drawable?
 
     fun canDecode(file: File):Boolean
 }

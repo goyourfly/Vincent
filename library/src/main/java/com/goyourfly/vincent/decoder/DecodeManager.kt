@@ -10,10 +10,10 @@ import java.io.File
 object DecodeManager{
     val decoderList = arrayOf(GifDecoder(),BitmapDecoder())
 
-    fun decode(file:File):Drawable?{
+    fun decode(file:File,width:Int,height:Int):Drawable?{
         for (decoder in decoderList){
             if(decoder.canDecode(file)){
-                return decoder.decode(file)
+                return decoder.decode(file,width,height)
             }
         }
         return null

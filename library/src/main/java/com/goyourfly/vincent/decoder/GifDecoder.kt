@@ -20,7 +20,7 @@ class GifDecoder: Decoder {
 
 
 
-    override fun decode(file: File): Drawable? {
+    override fun decode(file: File,width:Int,height:Int): Drawable? {
         val input = FileInputStream(file)
         val gifDecodeHelper = GifDecodeHelper()
         gifDecodeHelper.read(input, file.length().toInt())

@@ -6,6 +6,8 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.TextUtils
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
 import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.FileCacheManager
@@ -14,6 +16,7 @@ import com.goyourfly.vincent.common.HashCodeGenerator
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.target.ImageTarget
 import com.goyourfly.vincent.target.Target
+import com.goyourfly.vincent.transform.Transform
 import java.io.File
 
 /**
@@ -25,7 +28,9 @@ object Vincent{
     var dispatcher:Dispatcher? = null
     var memoryCache:CacheManager<Drawable>? = null
     var fileCache:CacheManager<File>? = null
+    var context:Context? = null
     fun with(context:Context):Builder{
+        this.context = context
         if(memoryCache == null){
             memoryCache = MemoryCacheManager(1024 * 1024 * 8)
         }
@@ -57,6 +62,10 @@ object Vincent{
          */
         var scale: Scale = Scale.CENTER_CROP
         /**
+         * if fit imageview size
+         */
+        var fit = false
+        /**
          * the target for image
          */
         var target: Target = Target()
@@ -76,6 +85,7 @@ object Vincent{
 
         var priority:Priority = Priority.NORMAL
 
+        val transformList = arrayListOf<Transform>()
 
         fun placeholder(id:Int):Builder{
             this.placeholderId = id
@@ -87,12 +97,24 @@ object Vincent{
             return this
         }
 
+        fun fit():Builder{
+            fit = true
+            return this
+        }
+
         fun resize(width:Int,height:Int):Builder{
+            if(fit)
+                throw IllegalArgumentException("fit can not resize")
             this.resizeWidth = width
             this.resizeHeight = height
             if(width == 0
                     && height == 0)
                 throw IllegalArgumentException("The width and height must have a greater than 0")
+            return this
+        }
+
+        fun transform(transform: Transform):Builder{
+            transformList.add(transform)
             return this
         }
 
@@ -140,7 +162,9 @@ object Vincent{
         fun into(target: Target){
             this.target = target
             val requestInfo = RequestContext(
+                    context!!,
                     uri,
+                    fit,
                     resizeWidth,
                     resizeHeight,
                     scale,
@@ -149,13 +173,14 @@ object Vincent{
                     target,
                     placeholderId,
                     errorId,
-                    HashCodeGenerator()
+                    HashCodeGenerator(),
+                    transformList
             )
             dispatcher.dispatchSubmit(requestInfo)
         }
 
         fun into(imageView: ImageView){
-            into(ImageTarget(imageView,placeholderId,errorId))
+            into(ImageTarget(imageView))
         }
     }
 }

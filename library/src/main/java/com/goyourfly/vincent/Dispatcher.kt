@@ -8,12 +8,15 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
+import android.view.View
+import android.widget.ImageView
 import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.handle.FileRequestHandler
 import com.goyourfly.vincent.handle.HttpRequestHandler
 import com.goyourfly.vincent.handle.RequestHandler
 import com.goyourfly.vincent.handle.ResourceRequestHandler
+import com.goyourfly.vincent.target.ImageTarget
 import java.io.File
 import java.util.concurrent.*
 
@@ -111,6 +114,24 @@ class Dispatcher(
             when (msg.what) {
                 What.SUBMIT -> {
                     val requestInfo = msg.obj as RequestContext
+                    // 获取图片宽高
+                    if(requestInfo.fit && requestInfo.target is ImageTarget) {
+                        var retry = 0
+                        while (retry < 10) {
+                            requestInfo.resizeWidth = requestInfo.target.imageView.width
+                            requestInfo.resizeHeight = requestInfo.target.imageView.height
+                            if (requestInfo.resizeWidth != 0
+                                    || requestInfo.resizeHeight != 0)
+                                break
+                            retry++
+                            Thread.sleep(100)
+                        }
+                    }
+
+                    handlerMain.post({
+                        requestInfo.target.onInit(requestInfo.loadDrawable(requestInfo.placeholderId))
+                    })
+
                     val key = requestInfo.key
                     val targetId = requestInfo.target.getId()
                     "Target id:$targetId".logD()
@@ -161,7 +182,7 @@ class Dispatcher(
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.get(key)!!
                         val file = fileCache.get(requestInfo.keyForCache)!!
-                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file))
+                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file,requestInfo))
                     }
                 }
 
@@ -202,7 +223,8 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.remove(key)
-                        handlerMain.post { requestInfo!!.target.onError(NetworkErrorException()) }
+
+                        handlerMain.post { requestInfo!!.target.onError(requestInfo.loadDrawable(requestInfo.errorId),NetworkErrorException()) }
                     }
                 }
             }

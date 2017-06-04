@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.goyourfly.vincent.Vincent
+import com.goyourfly.vincent.transform.RoundRectTransform
 import com.squareup.picasso.Picasso
 
 class MainActivity : AppCompatActivity() {
@@ -44,6 +45,8 @@ class MainActivity : AppCompatActivity() {
                     .load(list.get(p1))
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.loading_error)
+                    .fit()
+                    .transform(RoundRectTransform(20F))
                     .into(p0.image)
 //            Picasso.with(p0.image.context)
 //                    .load(list.get(p1))
