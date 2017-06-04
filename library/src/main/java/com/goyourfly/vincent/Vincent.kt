@@ -1,5 +1,6 @@
 package com.goyourfly.vincent
 
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
@@ -24,7 +25,6 @@ object Vincent{
     var dispatcher:Dispatcher? = null
     var memoryCache:CacheManager<Drawable>? = null
     var fileCache:CacheManager<File>? = null
-
     fun with(context:Context):Builder{
         if(memoryCache == null){
             memoryCache = MemoryCacheManager(1024 * 1024 * 8)
@@ -33,7 +33,7 @@ object Vincent{
             fileCache = FileCacheManager(1024 * 1024 * 20,"data/data/${context.packageName}/vincent/cache/")
         }
         if(dispatcher == null){
-            dispatcher = Dispatcher(memoryCache!!, fileCache!!)
+            dispatcher = Dispatcher(context.resources,memoryCache!!, fileCache!!)
         }
         return Builder(dispatcher!!)
     }
@@ -114,6 +114,11 @@ object Vincent{
 
         fun load(uri: Uri):Builder{
             this.uri = uri
+            return this
+        }
+
+        fun load(id: Int):Builder{
+            this.uri = Uri.fromParts(ContentResolver.SCHEME_ANDROID_RESOURCE,"",id.toString())
             return this
         }
 

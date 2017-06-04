@@ -1,6 +1,7 @@
 package com.goyourfly.vincent
 
 import android.accounts.NetworkErrorException
+import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Handler
@@ -12,6 +13,7 @@ import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.handle.FileRequestHandler
 import com.goyourfly.vincent.handle.HttpRequestHandler
 import com.goyourfly.vincent.handle.RequestHandler
+import com.goyourfly.vincent.handle.ResourceRequestHandler
 import java.io.File
 import java.util.concurrent.*
 
@@ -19,7 +21,9 @@ import java.util.concurrent.*
  * Created by gaoyufei on 2017/5/31.
  *
  */
-class Dispatcher(val memoryCache: CacheManager<Drawable>,
+class Dispatcher(
+        val res:Resources,
+        val memoryCache: CacheManager<Drawable>,
                  val fileCache: CacheManager<File>) {
 
     object What {
@@ -60,7 +64,7 @@ class Dispatcher(val memoryCache: CacheManager<Drawable>,
     val executor = Executors.newFixedThreadPool(3)
     val executorBitmap = Executors.newSingleThreadExecutor()
     val executorManager = TaskManager()
-    val networkHandler = arrayListOf<RequestHandler<File>>(HttpRequestHandler(fileCache),FileRequestHandler(fileCache))
+    val networkHandler = arrayListOf<RequestHandler<File>>(HttpRequestHandler(fileCache),FileRequestHandler(fileCache),ResourceRequestHandler(fileCache,res))
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 

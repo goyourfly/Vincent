@@ -3,6 +3,10 @@ package com.goyourfly.vincent.common
 import android.util.Log
 import android.os.Build
 import android.graphics.Bitmap
+import java.io.File
+import android.R.attr.path
+import android.graphics.BitmapFactory
+
 
 
 
@@ -33,4 +37,13 @@ fun Bitmap.byteSize(): Int {
     }  else {
         return rowBytes * height
     }
+}
+
+fun File.getImgType():String?{
+    val options = BitmapFactory.Options()
+    options.inJustDecodeBounds = true
+    BitmapFactory.decodeFile(absolutePath, options)
+    val type = options.outMimeType
+    "Type:$type".logD()
+    return type
 }

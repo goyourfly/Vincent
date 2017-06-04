@@ -17,11 +17,11 @@ class SingleImageActivity : AppCompatActivity() {
         findViewById(R.id.reload).setOnClickListener {
             Vincent.with(this)
 //                    .load("http://i.imgur.com/CqmBjo5.jpg")
-                    .load("https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=2716425886,2705799946&fm=26&gp=0.jpg")
+//                    .load("http://wx4.sinaimg.cn/large/ab9754c5ly1fg70pc7pyqg20i00bnheb.gif")
+                    .load(R.drawable.test_img)
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.loading_error)
                     .into(image)
         }
-
     }
 }

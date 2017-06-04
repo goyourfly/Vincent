@@ -37,6 +37,7 @@ class FileRequestHandler(val fileCacheManager: CacheManager<File>) : RequestHand
                     break
                 output.write(buf, 0, len)
             }
+            output.flush()
             output.close()
             input.close()
             return fileTo
