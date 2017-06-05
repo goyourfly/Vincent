@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.goyourfly.vincent.Vincent
+import com.goyourfly.vincent.transform.CircleTransform
 import com.goyourfly.vincent.transform.RoundRectTransform
 import com.squareup.picasso.Picasso
 
@@ -47,11 +48,11 @@ class MainActivity : AppCompatActivity() {
                     .error(R.drawable.loading_error)
                     .fit()
                     .transform(RoundRectTransform(20F))
+                    .transform(CircleTransform())
                     .into(p0.image)
 //            Picasso.with(p0.image.context)
 //                    .load(list.get(p1))
 //                    .into(p0.image)
-            Log.d("MainActivity","------Target id>>:${p0.image.hashCode()}");
         }
 
         override fun getItemCount(): Int {
@@ -60,7 +61,6 @@ class MainActivity : AppCompatActivity() {
 
         override fun onCreateViewHolder(p0: ViewGroup?, p1: Int): ViewHolder {
             val view =  ViewHolder(LayoutInflater.from(p0?.context).inflate(R.layout.item_img,p0,false))
-//            Log.d("TaskManager","ViewCount:" + p0?.childCount + ",id:" + view.hashCode())
             return view
         }
 

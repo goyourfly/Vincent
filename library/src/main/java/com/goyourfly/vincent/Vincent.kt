@@ -35,7 +35,7 @@ object Vincent{
             memoryCache = MemoryCacheManager(1024 * 1024 * 8)
         }
         if(fileCache == null){
-            fileCache = FileCacheManager(1024 * 1024 * 20,"data/data/${context.packageName}/vincent/cache/")
+            fileCache = FileCacheManager(1024 * 1024 * 50,"data/data/${context.packageName}/vincent/cache/")
         }
         if(dispatcher == null){
             dispatcher = Dispatcher(context.resources,memoryCache!!, fileCache!!)
