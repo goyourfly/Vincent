@@ -117,6 +117,7 @@ class Dispatcher(
                     // 获取图片宽高
                     if(requestInfo.fit && requestInfo.target is ImageTarget) {
                         var retry = 0
+                        val time = System.currentTimeMillis()
                         while (retry < 10) {
                             requestInfo.resizeWidth = requestInfo.target.imageView.width
                             requestInfo.resizeHeight = requestInfo.target.imageView.height
@@ -124,8 +125,9 @@ class Dispatcher(
                                     || requestInfo.resizeHeight != 0)
                                 break
                             retry++
-                            Thread.sleep(100)
+                            Thread.sleep(50)
                         }
+                        "InitViewSizeCostTime:${System.currentTimeMillis() - time}".logD()
                     }
 
                     handlerMain.post({
@@ -237,12 +239,4 @@ class Dispatcher(
         msg?.obj = requestContext
         handler?.sendMessage(msg)
     }
-
-    fun dispatchCancel(targetId:String) {
-        val msg = handler?.obtainMessage(What.CANCEL)
-        msg?.obj = targetId
-        handler?.sendMessage(msg)
-    }
-
-
 }
