@@ -29,10 +29,13 @@ object Vincent{
     var memoryCache:CacheManager<Drawable>? = null
     var fileCache:CacheManager<File>? = null
     var context:Context? = null
+
+
+    @JvmStatic
     fun with(context:Context):Builder{
         this.context = context
         if(memoryCache == null){
-            memoryCache = MemoryCacheManager(1024 * 1024 * 8)
+            memoryCache = MemoryCacheManager(1024 * 1024 * 20)
         }
         if(fileCache == null){
             fileCache = FileCacheManager(1024 * 1024 * 50,"data/data/${context.packageName}/vincent/cache/")

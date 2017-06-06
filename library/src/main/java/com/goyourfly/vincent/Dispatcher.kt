@@ -159,7 +159,7 @@ class Dispatcher(
                         return
                     }
                     // 判断本地文件系统是否有该图片
-                    if (fileCache.contain(requestInfo.keyForCache)) {
+                    if (fileCache.contain(requestInfo.keyForFileCache)) {
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
                         return
                     }
@@ -183,7 +183,7 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.get(key)!!
-                        val file = fileCache.get(requestInfo.keyForCache)!!
+                        val file = fileCache.get(requestInfo.keyForFileCache)!!
                         requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file,requestInfo))
                     }
                 }

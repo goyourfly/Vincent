@@ -21,7 +21,7 @@ class RunFileDownloader(val handler:Handler,
             return null
         }
         try {
-            val file = requestHandler.fetchSync(requestContext.keyForCache, requestContext.uri)
+            val file = requestHandler.fetchSync(requestContext.keyForFileCache, requestContext.uri)
             if(file == null){
                 throw FileNotFoundException("File not found:${requestContext.uri.toString()},${file}")
             }else if(file.length() == 0L){
