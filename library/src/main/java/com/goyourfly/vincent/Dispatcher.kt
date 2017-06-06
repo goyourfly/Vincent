@@ -34,8 +34,6 @@ class Dispatcher(
         val DOWNLOAD_FINISH = 4
         val DOWNLOAD_ERROR = 5
 
-        val MEMORY_LOAD_COMPLETE = 6
-
         val FILE_LOAD_COMPLETE = 7
         val FILE_LOAD_ERROR = 8
         val TRIM_FILE_TO_SIZE = 9
@@ -46,7 +44,6 @@ class Dispatcher(
                 CANCEL -> "2:CANCEL"
                 DOWNLOAD_FINISH -> "4:DOWNLOAD_FINISH"
                 DOWNLOAD_ERROR -> "5:DOWNLOAD_ERROR"
-                MEMORY_LOAD_COMPLETE -> "6:MEMORY_LOAD_COMPLETE"
                 FILE_LOAD_COMPLETE -> "7:FILE_LOAD_COMPLETE"
                 FILE_LOAD_ERROR -> "8:FILE_LOAD_ERROR"
                 TRIM_FILE_TO_SIZE -> "9:TRIM_FILE_TO_SIZE"
@@ -149,18 +146,7 @@ class Dispatcher(
 
 
 
-
                     taskManager.put(key, requestInfo)
-                    // 首先判断内存的缓存中是否存在该图片
-                    "MemoryContain:${memoryCache.contain(requestInfo.keyForMemoryCache)},id:${requestInfo.keyForMemoryCache}".logD()
-                    if (memoryCache.contain(requestInfo.keyForMemoryCache)) {
-                        sendMessage(obtainMessage(What.MEMORY_LOAD_COMPLETE, key))
-                        return
-                    }else{
-                        handlerMain.post({
-                            requestInfo.target.onInit(requestInfo.loadDrawable(requestInfo.placeholderId))
-                        })
-                    }
                     // 判断本地文件系统是否有该图片
                     if (fileCache.contain(requestInfo.keyForFileCache)) {
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
@@ -188,17 +174,6 @@ class Dispatcher(
                         val requestInfo = taskManager.get(key)!!
                         val file = fileCache.get(requestInfo.keyForFileCache)!!
                         requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file, requestInfo))
-                    }
-                }
-
-                What.MEMORY_LOAD_COMPLETE -> {
-                    val key = msg.obj as String
-                    if (taskManager.containsKey(key)) {
-                        val requestInfo = taskManager.remove(key)!!
-                        val bitmap = memoryCache.get(requestInfo.keyForMemoryCache)
-                        if (bitmap != null) {
-                            handlerMain.post { requestInfo.target.onComplete(bitmap) }
-                        }
                     }
                 }
 
@@ -237,9 +212,25 @@ class Dispatcher(
     }
 
 
-    fun dispatchSubmit(requestContext: RequestContext) {
+    fun dispatchSubmit(request: RequestContext) {
+        // 首先判断内存的缓存中是否存在该图片
+        "MemoryContain:${memoryCache.contain(request.keyForMemoryCache)},id:${request.keyForMemoryCache}".logD()
+        if (memoryCache.contain(request.keyForMemoryCache)) {
+            executorManager.remove(request.key)
+            val bitmap = memoryCache.get(request.keyForMemoryCache)
+            if (bitmap != null) {
+                request.target.onComplete(bitmap)
+            }
+            return
+        } else {
+            handlerMain.post({
+                request.target.onInit(request.loadDrawable(request.placeholderId))
+            })
+        }
+
+
         val msg = handler?.obtainMessage(What.SUBMIT)
-        msg?.obj = requestContext
+        msg?.obj = request
         handler?.sendMessage(msg)
     }
 }
