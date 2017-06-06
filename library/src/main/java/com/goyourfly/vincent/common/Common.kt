@@ -33,7 +33,7 @@ fun Bitmap.byteSize(): Int {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
         return allocationByteCount
     } else {
-        return rowBytes * height
+        return byteCount
     }
 }
 
