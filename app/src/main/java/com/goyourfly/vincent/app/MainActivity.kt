@@ -31,6 +31,9 @@ class MainActivity : AppCompatActivity() {
             adapter.addItem(str)
         }
         adapter.notifyItemRangeInserted(0,adapter.itemCount)
+        findViewById(R.id.refresh).setOnClickListener {
+            adapter.notifyDataSetChanged()
+        }
     }
 
     class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
@@ -47,12 +50,9 @@ class MainActivity : AppCompatActivity() {
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.loading_error)
                     .fit()
-                    .transform(RoundRectTransform(20F))
+//                    .transform(RoundRectTransform(20F))
                     .transform(CircleTransform())
                     .into(p0.image)
-//            Picasso.with(p0.image.context)
-//                    .load(list.get(p1))
-//                    .into(p0.image)
         }
 
         override fun getItemCount(): Int {

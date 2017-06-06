@@ -13,6 +13,7 @@ import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.FileCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
+import com.goyourfly.vincent.common.calculateMemoryCacheSize
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.target.ImageTarget
 import com.goyourfly.vincent.target.Target
@@ -35,10 +36,10 @@ object Vincent{
     fun with(context:Context):Builder{
         this.context = context
         if(memoryCache == null){
-            memoryCache = MemoryCacheManager(1024 * 1024 * 20)
+            memoryCache = MemoryCacheManager(calculateMemoryCacheSize(context))
         }
         if(fileCache == null){
-            fileCache = FileCacheManager(1024 * 1024 * 50,"data/data/${context.packageName}/vincent/cache/")
+            fileCache = FileCacheManager(1024 * 1024 * 100,"data/data/${context.packageName}/vincent/cache/")
         }
         if(dispatcher == null){
             dispatcher = Dispatcher(context.resources,memoryCache!!, fileCache!!)

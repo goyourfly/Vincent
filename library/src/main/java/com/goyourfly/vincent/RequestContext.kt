@@ -37,7 +37,7 @@ data class RequestContext(
     /**
      * 这个ID只绑定url，没有区别target
      */
-    val keyForCache:String = keyGenerator.generate(uri.toString(),target.getId())
+    val keyForMemoryCache:String = keyGenerator.generate(uri.toString())
     val keyForFileCache:String = keyGenerator.generate(uri.toString())
 
     var futureDownload:Future<File>? = null

@@ -8,8 +8,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
-import android.view.View
-import android.widget.ImageView
 import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.handle.FileRequestHandler
@@ -154,7 +152,8 @@ class Dispatcher(
 
                     taskManager.put(key, requestInfo)
                     // 首先判断内存的缓存中是否存在该图片
-                    if (memoryCache.contain(requestInfo.keyForCache)) {
+                    "MemoryContain:${memoryCache.contain(requestInfo.keyForMemoryCache)},id:${requestInfo.keyForMemoryCache}".logD()
+                    if (memoryCache.contain(requestInfo.keyForMemoryCache)) {
                         sendMessage(obtainMessage(What.MEMORY_LOAD_COMPLETE, key))
                         return
                     }else{
@@ -196,7 +195,7 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.remove(key)!!
-                        val bitmap = memoryCache.get(requestInfo.keyForCache)
+                        val bitmap = memoryCache.get(requestInfo.keyForMemoryCache)
                         if (bitmap != null) {
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
                         }
@@ -209,7 +208,7 @@ class Dispatcher(
                         val requestInfo = taskManager.remove(key)
                         val bitmap = requestInfo?.future?.get()
                         if (bitmap != null) {
-                            memoryCache.set(requestInfo.keyForCache, bitmap)
+                            memoryCache.set(requestInfo.keyForMemoryCache, bitmap)
                             handlerMain.post { requestInfo.target.onComplete(bitmap) }
                         }
                     }
