@@ -59,7 +59,7 @@ class Dispatcher(
      * of Vincent called
      */
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
-    val executor = Executors.newFixedThreadPool(3)
+    val executor = Executors.newFixedThreadPool(8)
     val executorBitmap = Executors.newSingleThreadExecutor()
     val executorManager = TaskManager()
     val networkHandler = arrayListOf<RequestHandler<File>>(HttpRequestHandler(fileCache), FileRequestHandler(fileCache), ResourceRequestHandler(fileCache, res))
@@ -110,23 +110,7 @@ class Dispatcher(
                 What.SUBMIT -> {
                     val requestInfo = msg.obj as RequestContext
                     val key = requestInfo.key
-                    val targetId = requestInfo.target.getId()
-                    "Target id:$targetId".logD()
-                    if (taskManager.containsTargetId(targetId)) {
-                        // 判断当前target是否有任务
-                        val requestInfoOld = taskManager.getByTargetId(targetId)
-                        if (requestInfoOld != null) {
-                            "Target[${targetId}] already have a task".logD()
-                            // 如果当前有任务，但是任务和之前的一致，则返回，让老任务继续
-                            if (requestInfoOld == requestInfo) {
-                                return
-                            }
-                            "Target[$targetId] old task not equals new task, so cancel before".logD()
-                            // 否则，取消老任务，执行新的任务
-                            requestInfoOld.cancel()
-                            taskManager.removeByTargetId(targetId)
-                        }
-                    }
+
 
                     // 获取图片宽高
                     if (requestInfo.fit && requestInfo.target is ImageTarget) {
@@ -149,9 +133,11 @@ class Dispatcher(
                     taskManager.put(key, requestInfo)
                     // 判断本地文件系统是否有该图片
                     if (fileCache.contain(requestInfo.keyForFileCache)) {
+                        requestInfo.setFrom(LoadFrom.FROM_SD_CARD)
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
                         return
                     }
+                    requestInfo.setFrom(LoadFrom.FROM_NET)
                     // 触发清空缓存
                     removeMessages(What.TRIM_FILE_TO_SIZE)
                     sendMessageDelayed(obtainMessage(What.TRIM_FILE_TO_SIZE), 1000 * 5)
@@ -213,12 +199,30 @@ class Dispatcher(
 
 
     fun dispatchSubmit(request: RequestContext) {
+        val targetId = request.target.getId()
+        "Target id:$targetId".logD()
+        if (executorManager.containsTargetId(targetId)) {
+            // 判断当前target是否有任务
+            val requestInfoOld = executorManager.getByTargetId(targetId)
+            if (requestInfoOld != null) {
+                "Target[${targetId}] already have a task".logD()
+                // 如果当前有任务，但是任务和之前的一致，则返回，让老任务继续
+                if (requestInfoOld == request) {
+                    return
+                }
+                "Target[$targetId] old task not equals new task, so cancel before".logD()
+                // 否则，取消老任务，执行新的任务
+                requestInfoOld.cancel()
+                executorManager.removeByTargetId(targetId)
+            }
+        }
+
         // 首先判断内存的缓存中是否存在该图片
-        "MemoryContain:${memoryCache.contain(request.keyForMemoryCache)},id:${request.keyForMemoryCache}".logD()
         if (memoryCache.contain(request.keyForMemoryCache)) {
             executorManager.remove(request.key)
             val bitmap = memoryCache.get(request.keyForMemoryCache)
             if (bitmap != null) {
+                request.setFrom(LoadFrom.FROM_MEMORY)
                 request.target.onComplete(bitmap)
             }
             return

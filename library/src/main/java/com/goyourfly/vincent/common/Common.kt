@@ -50,34 +50,7 @@ fun File.getImgType(): String? {
     return type
 }
 
-fun Bitmap.centerCrop(width: Int, height: Int): Bitmap {
-    val bitmap = this
-    // if width and height neither zero, resize the bitmap
-    val bitmapNewWidth = bitmap.width
-    val bitmapNewHeight = bitmap.height
 
-    val scaleRate = bitmapNewWidth.toFloat() / bitmapNewHeight.toFloat()
-    val scaleX = bitmapNewWidth.toFloat() / width.toFloat()
-    val scaleY = bitmapNewHeight.toFloat() / height.toFloat()
-
-    var scaleBitmapWidth = 0
-    var scaleBitmapHeight = 0
-    if (scaleX > scaleY) {
-        scaleBitmapHeight = height
-        scaleBitmapWidth = (height * scaleRate).toInt()
-    } else {
-        scaleBitmapWidth = width
-        scaleBitmapHeight = (width / scaleRate).toInt()
-    }
-    "Decode:ScaleBitmapSize:$scaleBitmapWidth,$scaleBitmapHeight".logD()
-    val scaledBitmap = Bitmap.createScaledBitmap(bitmap, scaleBitmapWidth, scaleBitmapHeight, false)
-
-    if (width != 0 && height != 0) {
-        val newBitmap = Bitmap.createBitmap(scaledBitmap, (scaleBitmapWidth - width) / 2, (scaleBitmapHeight - height) / 2, width, height)
-        return newBitmap
-    }
-    return scaledBitmap
-}
 
 
 fun calculateMemoryCacheSize(context: Context): Int {
