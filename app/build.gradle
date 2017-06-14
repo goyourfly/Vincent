@@ -37,4 +37,5 @@ dependencies {
     compile 'net.soulwolf.widget:ratiolayout:1.0.0'
     compile 'com.github.goyourfly:MultiSelectAdapter:2.0'
 
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 }

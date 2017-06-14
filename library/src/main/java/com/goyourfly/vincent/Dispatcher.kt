@@ -216,7 +216,6 @@ class Dispatcher(
                 executorManager.removeByTargetId(targetId)
             }
         }
-
         // 首先判断内存的缓存中是否存在该图片
         if (memoryCache.contain(request.keyForMemoryCache)) {
             executorManager.remove(request.key)
@@ -226,10 +225,8 @@ class Dispatcher(
                 request.target.onComplete(bitmap)
             }
             return
-        } else {
-            handlerMain.post({
-                request.target.onInit(request.loadDrawable(request.placeholderId))
-            })
+        }else{
+            request.target.onInit(request.loadDrawable(request.placeholderId))
         }
 
 

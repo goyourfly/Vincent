@@ -13,15 +13,9 @@ import com.goyourfly.multiple.adapter.binder.view.CheckBoxFactory
 import com.goyourfly.vincent.Vincent
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.transform.RoundRectTransform
-import android.provider.MediaStore
-import android.provider.MediaStore.MediaColumns
-import android.app.Activity
-import android.database.Cursor
-import android.net.Uri
-import com.goyourfly.vincent.transform.CircleTransform
 
 
-class GalleryActivity : AppCompatActivity() {
+class LoadFromNetActivity : AppCompatActivity() {
     val recycler: RecyclerView by lazy {
         findViewById(R.id.recycler) as RecyclerView
     }
@@ -38,8 +32,19 @@ class GalleryActivity : AppCompatActivity() {
                 .build()
         recycler.layoutManager = mLayoutManager
 
-
-        for (str in getAllShownImagesPath(this)){
+        for (str in Data.URLS2) {
+            adapter.addItem(str)
+        }
+        for (str in Data.URLS2) {
+            adapter.addItem(str)
+        }
+        for (str in Data.URLS2) {
+            adapter.addItem(str)
+        }
+        for (str in Data.URLS2) {
+            adapter.addItem(str)
+        }
+        for (str in Data.URLS2) {
             adapter.addItem(str)
         }
         adapter.notifyItemRangeInserted(0, adapter.itemCount)
@@ -47,38 +52,7 @@ class GalleryActivity : AppCompatActivity() {
             adapter.notifyDataSetChanged()
         }
 
-    }
 
-    /**
-     * Getting All Images Path.
-
-     * @param activity
-     * *            the activity
-     * *
-     * @return ArrayList with images Path
-     */
-    private fun getAllShownImagesPath(activity: Activity): ArrayList<String> {
-        val uri: Uri
-        val cursor: Cursor
-        val column_index_data: Int
-        val column_index_folder_name: Int
-        val listOfAllImages = ArrayList<String>()
-        var absolutePathOfImage: String? = null
-        uri = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-
-        val projection = arrayOf(MediaColumns.DATA, MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
-
-        cursor = activity.contentResolver.query(uri, projection, null, null, null)
-
-        column_index_data = cursor.getColumnIndexOrThrow(MediaColumns.DATA)
-        column_index_folder_name = cursor
-                .getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
-        while (cursor.moveToNext()) {
-            absolutePathOfImage = cursor.getString(column_index_data)
-
-            listOfAllImages.add(absolutePathOfImage)
-        }
-        return listOfAllImages
     }
 
     class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
