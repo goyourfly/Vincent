@@ -34,8 +34,8 @@ class Dispatcher(
         val DOWNLOAD_FINISH = 4
         val DOWNLOAD_ERROR = 5
 
-        val FILE_LOAD_COMPLETE = 7
-        val FILE_LOAD_ERROR = 8
+        val BITMAP_DECODE_COMPLETE = 7
+        val BITMAP_DECODE_ERROR = 8
         val TRIM_FILE_TO_SIZE = 9
 
         fun getName(i: Int): String {
@@ -44,8 +44,8 @@ class Dispatcher(
                 CANCEL -> "2:CANCEL"
                 DOWNLOAD_FINISH -> "4:DOWNLOAD_FINISH"
                 DOWNLOAD_ERROR -> "5:DOWNLOAD_ERROR"
-                FILE_LOAD_COMPLETE -> "7:FILE_LOAD_COMPLETE"
-                FILE_LOAD_ERROR -> "8:FILE_LOAD_ERROR"
+                BITMAP_DECODE_COMPLETE -> "7:BITMAP_DECODE_COMPLETE"
+                BITMAP_DECODE_ERROR -> "8:BITMAP_DECODE_ERROR"
                 TRIM_FILE_TO_SIZE -> "9:TRIM_FILE_TO_SIZE"
                 else -> {
                     "$i:UNKNOWN"
@@ -142,23 +142,32 @@ class Dispatcher(
                         measureViewSize(requestInfo)
                         val file = fileCache.get(requestInfo.keyForFileCache)!!
                         requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file, requestInfo))
+                    }else{
+                        val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
+                        errMsg.obj = key
+                        sendMessage(errMsg)
                     }
                 }
 
-                What.FILE_LOAD_COMPLETE -> {
+                What.BITMAP_DECODE_COMPLETE -> {
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.remove(key)
-                        val bitmap = requestInfo?.future?.get()
-                        if (bitmap != null) {
-                            memoryCache.set(requestInfo.keyForMemoryCache, bitmap)
-                            handlerMain.post { requestInfo.target.onComplete(bitmap) }
+                        val drawable = requestInfo?.future?.get()
+                        if (drawable != null) {
+                            memoryCache.set(requestInfo.keyForMemoryCache, drawable)
+                            handlerMain.post { requestInfo.target.onComplete(drawable) }
                         }
+                    }else{
+                        val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
+                        errMsg.obj = key
+                        sendMessage(errMsg)
                     }
                 }
 
             // 每10秒清空一次缓存
                 What.TRIM_FILE_TO_SIZE -> {
+                    removeMessages(What.TRIM_FILE_TO_SIZE)
                     // 如果当前有任务，不清空
                     if (taskManager.size() == 0) {
                         fileCache.trimToSize()
@@ -171,7 +180,6 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.remove(key)
-
                         handlerMain.post { requestInfo!!.target.onError(requestInfo.loadDrawable(requestInfo.errorId), NetworkErrorException()) }
                     }
                 }
@@ -218,6 +226,8 @@ class Dispatcher(
                 executorManager.removeByTargetId(targetId)
             }
         }
+
+        //TODO LRUCACHE 有个坑，在回收的时候会导致图片部分黑掉
         // 首先判断内存的缓存中是否存在该图片
         if (memoryCache.contain(request.keyForMemoryCache)) {
             executorManager.remove(request.key)

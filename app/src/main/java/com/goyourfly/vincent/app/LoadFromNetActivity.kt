@@ -4,6 +4,8 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
+import com.goyourfly.multiple.adapter.MultipleSelect
+import com.goyourfly.multiple.adapter.viewholder.view.CheckBoxFactory
 import java.io.IOException
 
 
@@ -18,7 +20,10 @@ class LoadFromNetActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_load_from_net)
 
-        recycler.adapter = adapter
+        recycler.adapter = MultipleSelect.with(this)
+                .adapter(adapter)
+                .decorateFactory(CheckBoxFactory())
+                .build()
         recycler.layoutManager = mLayoutManager
 
         getImage()
@@ -36,7 +41,7 @@ class LoadFromNetActivity : AppCompatActivity() {
                 loading = true
                 runOnUiThread{
                     adapter.addItems(data)
-                    adapter.notifyDataSetChanged()
+                    recycler.adapter.notifyDataSetChanged()
                 }
             }
         })

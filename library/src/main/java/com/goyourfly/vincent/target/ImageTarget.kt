@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
+import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.decoder.GifDrawable
 
 /**

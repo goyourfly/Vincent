@@ -13,7 +13,7 @@ class LoadFromNet2Activity : AppCompatActivity() {
         findViewById(R.id.recycler) as RecyclerView
     }
     val adapter = MyAdapter()
-    val mLayoutManager = GridLayoutManager(this,2)
+    val mLayoutManager = GridLayoutManager(this,3)
     var loading = true
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,8 +54,9 @@ class LoadFromNet2Activity : AppCompatActivity() {
             override fun onSuccess(data: List<String>) {
                 loading = true
                 runOnUiThread {
+                    val start = adapter.itemCount
                     adapter.addItems(data)
-                    adapter.notifyDataSetChanged()
+                    adapter.notifyItemRangeInserted(start,data.size)
                 }
             }
         })

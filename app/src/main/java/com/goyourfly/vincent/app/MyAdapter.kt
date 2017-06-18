@@ -28,6 +28,7 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
 
     override fun onBindViewHolder(p0: ViewHolder, p1: Int) {
 //        if (p1 % 2 == 0) {
+        p0.image.tag = p1
         Vincent.with(p0.image.context)
                 .load(list.get(p1))
                 .placeholder(R.drawable.loading)

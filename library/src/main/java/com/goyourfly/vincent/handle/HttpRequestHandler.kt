@@ -58,9 +58,10 @@ class HttpRequestHandler(val fileCacheManager: CacheManager<File>): RequestHandl
             }
             return file
         }catch (e: IOException){
-            fileCacheManager.delete(key)
+            e.printStackTrace()
             outputStream?.close()
             inputStream?.close()
+            fileCacheManager.delete(key)
             return null
         }
     }

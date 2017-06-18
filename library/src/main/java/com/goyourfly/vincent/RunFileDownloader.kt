@@ -15,22 +15,21 @@ class RunFileDownloader(val handler:Handler,
                         val requestHandler: RequestHandler<File>?,
                         val requestContext: RequestContext):Callable<File>{
     override fun call(): File? {
-        "start download file".logD()
         if(requestHandler == null) {
             errorHandle()
             return null
         }
+        var file:File? = null
         try {
-            val file = requestHandler.fetchSync(requestContext.keyForFileCache, requestContext.uri)
+            file = requestHandler.fetchSync(requestContext.keyForFileCache, requestContext.uri)
             if(file == null){
-                throw FileNotFoundException("File not found:${requestContext.uri.toString()},${file}")
+                throw FileNotFoundException("File not found:${requestHandler::class.javaObjectType},${requestContext.uri.toString()},${file}")
             }else if(file.length() == 0L){
                 throw FileNotFoundException("File length is 0")
             }
             val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_FINISH)
             msg.obj = requestContext.key
             handler.sendMessage(msg)
-            "end download file".logD()
             return file
         }catch (e: Exception){
             e.printStackTrace()

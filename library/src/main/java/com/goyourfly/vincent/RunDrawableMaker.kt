@@ -1,9 +1,9 @@
 package com.goyourfly.vincent
 
-import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
+import android.os.Message
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.decoder.DecodeManager
 import java.io.File
@@ -14,7 +14,6 @@ import java.util.concurrent.Callable
  */
 class RunDrawableMaker(val handler:Handler, val key:String, val file:File,val requestContext: RequestContext):Callable<Drawable>{
     override fun call(): Drawable? {
-        "RunDrawableMaker--->$key".logD()
         var drawable = DecodeManager.decode(file,requestContext.resizeWidth,requestContext.resizeHeight)
         // 有时候可能需要Bitmap的转换
         if(drawable is BitmapDrawable
@@ -27,10 +26,14 @@ class RunDrawableMaker(val handler:Handler, val key:String, val file:File,val re
                 drawable = BitmapDrawable(bitmap)
             }
         }
-        val msg = handler.obtainMessage(Dispatcher.What.FILE_LOAD_COMPLETE)
+        val msg:Message?
+        if(drawable != null){
+            msg = handler.obtainMessage(Dispatcher.What.BITMAP_DECODE_COMPLETE)
+        }else{
+            msg = handler.obtainMessage(Dispatcher.What.BITMAP_DECODE_ERROR)
+        }
         msg.obj = key
         handler.sendMessage(msg)
-        "RunDrawableMaker end--->$key".logD()
         return drawable
     }
 }
