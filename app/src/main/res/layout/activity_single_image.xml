@@ -8,24 +8,16 @@
     <net.soulwolf.widget.ratiolayout.widget.RatioFrameLayout
         app:datumRatio="datumWidth"
         app:widthRatio="16.0"
-        app:heightRatio="7.0"
+        app:heightRatio="16.0"
         android:layout_gravity="center"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <ImageView
             android:id="@+id/image"
-            android:scaleType="centerCrop"
+            android:scaleType="fitCenter"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
     </net.soulwolf.widget.ratiolayout.widget.RatioFrameLayout>
-    <Button
-        android:id="@+id/reload"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="32dp"
-        android:text="Reload"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
 </FrameLayout>

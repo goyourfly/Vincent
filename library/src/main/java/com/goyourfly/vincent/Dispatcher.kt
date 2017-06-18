@@ -111,25 +111,6 @@ class Dispatcher(
                     val requestInfo = msg.obj as RequestContext
                     val key = requestInfo.key
 
-
-                    // 获取图片宽高
-                    if (requestInfo.fit && requestInfo.target is ImageTarget) {
-                        var retry = 0
-                        val time = System.currentTimeMillis()
-                        while (retry < 10) {
-                            requestInfo.resizeWidth = requestInfo.target.imageView.width
-                            requestInfo.resizeHeight = requestInfo.target.imageView.height
-                            if (requestInfo.resizeWidth != 0
-                                    || requestInfo.resizeHeight != 0)
-                                break
-                            retry++
-                            Thread.sleep(50)
-                        }
-                        "InitViewSizeCostTime:${System.currentTimeMillis() - time}".logD()
-                    }
-
-
-
                     taskManager.put(key, requestInfo)
                     // 判断本地文件系统是否有该图片
                     if (fileCache.contain(requestInfo.keyForFileCache)) {
@@ -158,6 +139,7 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.get(key)!!
+                        measureViewSize(requestInfo)
                         val file = fileCache.get(requestInfo.keyForFileCache)!!
                         requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file, requestInfo))
                     }
@@ -195,6 +177,26 @@ class Dispatcher(
                 }
             }
         }
+
+        fun measureViewSize(requestInfo: RequestContext?) {
+            if (requestInfo == null)
+                return
+            // 获取图片宽高
+            if (requestInfo.fit && requestInfo.target is ImageTarget) {
+                val time = System.currentTimeMillis()
+                var retry = 0
+                while (retry < 40) {
+                    if (requestInfo.resizeWidth != 0
+                            || requestInfo.resizeHeight != 0)
+                        break
+                    requestInfo.resizeWidth = requestInfo.target.imageView.measuredWidth
+                    requestInfo.resizeHeight = requestInfo.target.imageView.measuredHeight
+                    retry++
+                    Thread.sleep(50)
+                }
+                "InitViewSizeCostTime:${System.currentTimeMillis() - time}".logD()
+            }
+        }
     }
 
 
@@ -225,7 +227,7 @@ class Dispatcher(
                 request.target.onComplete(bitmap)
             }
             return
-        }else{
+        } else {
             request.target.onInit(request.loadDrawable(request.placeholderId))
         }
 

@@ -16,6 +16,12 @@
         android:layout_marginTop="32dp" />
 
     <Button
+        android:id="@+id/btn_net_2"
+        android:text="Load from net_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
+    <Button
         android:id="@+id/btn_gallery"
         android:text="Load from gallery"
         android:layout_width="match_parent"
@@ -29,4 +35,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp" />
 
+    <Button
+        android:id="@+id/btn_gif"
+        android:text="Gif image"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp" />
 </LinearLayout>

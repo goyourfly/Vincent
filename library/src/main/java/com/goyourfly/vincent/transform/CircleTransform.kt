@@ -5,7 +5,7 @@ import android.graphics.*
 /**
  * Created by Administrator on 2017/6/4 0004.
  */
-class CircleTransform():Transform{
+class CircleTransform(): ShapeTransform() {
     override fun transform(bitmap: Bitmap): Bitmap {
         val newBitmap = Bitmap.createBitmap(bitmap.width,bitmap.height,bitmap.config)
         val canvas = Canvas(newBitmap)

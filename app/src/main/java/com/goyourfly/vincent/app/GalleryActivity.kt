@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.goyourfly.multiple.adapter.MultipleSelect
-import com.goyourfly.multiple.adapter.binder.view.CheckBoxFactory
 import com.goyourfly.vincent.Vincent
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.transform.RoundRectTransform
@@ -18,6 +17,7 @@ import android.provider.MediaStore.MediaColumns
 import android.app.Activity
 import android.database.Cursor
 import android.net.Uri
+import com.goyourfly.multiple.adapter.viewholder.view.CheckBoxFactory
 import com.goyourfly.vincent.transform.CircleTransform
 
 
@@ -43,10 +43,6 @@ class GalleryActivity : AppCompatActivity() {
             adapter.addItem(str)
         }
         adapter.notifyItemRangeInserted(0, adapter.itemCount)
-        findViewById(R.id.refresh).setOnClickListener {
-            adapter.notifyDataSetChanged()
-        }
-
     }
 
     /**

@@ -13,8 +13,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".LoadFromNetActivity" />
+        <activity android:name=".LoadFromNet2Activity" />
         <activity android:name=".GalleryActivity" />
         <activity android:name=".SingleImageActivity" />
+        <activity android:name=".GifActivity" />
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme.DarkActionBar">
