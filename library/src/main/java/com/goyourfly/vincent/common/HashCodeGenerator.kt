@@ -6,14 +6,14 @@ import com.goyourfly.vincent.target.Target
  */
 class HashCodeGenerator:KeyGenerator{
 
-    val prefix = "Vincent"
+    val prefix = "vincent"
     override fun generate(str: String,targetId: String): String {
         if(str.trim().isEmpty()){
             throw NullPointerException("input str should not null")
         }
-        return "$prefix-${str.hashCode()}@${targetId}"
+        return "$prefix-${str.hashCode()}-${targetId}"
     }
     override fun generate(str: String): String {
-        return "$prefix-${str.hashCode()}.jpg"
+        return "$prefix-${str.hashCode()}"
     }
 }

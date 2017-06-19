@@ -17,9 +17,9 @@ object DataProvider {
 
     val URL_SEARCH_IMG = "https://api.cognitive.microsoft.com/bing/v5.0/images/search"
     private val client = OkHttpClient()
-    fun fetchImages(word:String,callback: DataProvider.ImageCallback) {
+    fun fetchImages(word:String,offset:Int,count:Int,callback: DataProvider.ImageCallback) {
         val request = Request.Builder()
-                .url("$URL_SEARCH_IMG?q=$word&mkt=en-us HTTP/1.1")
+                .url("$URL_SEARCH_IMG?q=$word&mkt=en-us HTTP/1.1&size=Medium&offset=$offset&count=$count")
                 .addHeader("Ocp-Apim-Subscription-Key", "e2618f38429e4a07a9399a0066159f5f")
                 .build()
         client.newCall(request).enqueue(object : Callback {

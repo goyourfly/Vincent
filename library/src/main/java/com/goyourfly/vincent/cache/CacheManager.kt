@@ -3,19 +3,17 @@ package com.goyourfly.vincent.cache
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-interface CacheManager<T>{
+interface CacheManager<T> {
 
-    fun set(key:String,value: T)
+    fun write(key: String, value: T):Boolean
 
-    fun get(key:String):T?
+    fun read(key: String): T?
 
-    fun contain(key:String):Boolean
+    fun exist(key: String): Boolean
 
-    fun delete(key:String):T?
+    fun delete(key: String): Boolean
 
     fun clear();
 
-    fun count():Int;
-
-    fun trimToSize();
+    fun size(): Long
 }

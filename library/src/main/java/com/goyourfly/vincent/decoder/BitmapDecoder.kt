@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable
 import com.goyourfly.vincent.common.getImgType
 import com.goyourfly.vincent.common.logD
 import java.io.File
+import java.io.InputStream
 
 
 /**
@@ -17,8 +18,12 @@ class BitmapDecoder : Decoder {
     val TYPE_PNG = "image/png"
     val TYPE_BMP = "image/bmp"
     val TYPE_WEBP = "image/webp"
-    override fun canDecode(file: File): Boolean {
-        return when (file.getImgType()) {
+    override fun canDecode(streamProvider: StreamProvider): Boolean {
+        val bitmapOption = BitmapFactory.Options()
+        bitmapOption.inJustDecodeBounds = true
+        BitmapFactory.decodeStream(streamProvider.getInputStream(),null,bitmapOption)
+        "FileType:${bitmapOption.outMimeType}".logD()
+        return when (bitmapOption.outMimeType) {
             TYPE_JPEG -> true
             TYPE_PNG -> true
             TYPE_WEBP -> true
@@ -27,23 +32,23 @@ class BitmapDecoder : Decoder {
         }
     }
 
-    override fun decode(file: File, width: Int, height: Int): Drawable? {
+    override fun decode(streamProvider: StreamProvider, width: Int, height: Int): Drawable? {
         "Decode:size:$width,$height".logD()
         if (width == 0 && height == 0) {
-            return BitmapDrawable(BitmapFactory.decodeFile(file.path))
+            return BitmapDrawable(BitmapFactory.decodeStream(streamProvider.getInputStream()))
         }
-        return BitmapDrawable(transformBitmap(file, width, height))
+        return BitmapDrawable(transformBitmap(streamProvider, width, height))
     }
 
 
     /**
      * This is my code
      */
-    fun transformBitmap(file: File, width: Int, height: Int): Bitmap {
+    fun transformBitmap(streamProvider: StreamProvider, width: Int, height: Int): Bitmap {
         // Read bitmap origin size
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
-        BitmapFactory.decodeFile(file.path, options)
+        BitmapFactory.decodeStream(streamProvider.getInputStream(),null, options)
         val bitmapWidth = options.outWidth
         val bitmapHeight = options.outHeight
         "Decode:BitmapSize:$bitmapWidth,$bitmapHeight".logD()
@@ -58,7 +63,7 @@ class BitmapDecoder : Decoder {
         options.inJustDecodeBounds = false
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
         // read the resized bitmap by set sample size
-        val bitmap = BitmapFactory.decodeFile(file.path, options)
+        val bitmap = BitmapFactory.decodeStream(streamProvider.getInputStream(),null, options)
         if(width == 0
                 || height  == 0)
             return bitmap

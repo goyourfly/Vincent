@@ -1,12 +1,14 @@
 package com.goyourfly.vincent.decoder
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import com.goyourfly.vincent.common.getImgType
 import com.goyourfly.vincent.common.logD
 import java.io.File
 import java.io.FileInputStream
+import java.io.InputStream
 
 /**
  * Created by gaoyufei on 2017/6/3.
@@ -14,16 +16,18 @@ import java.io.FileInputStream
 
 class GifDecoder: Decoder {
     val TYPE = "image/gif"
-    override fun canDecode(file: File): Boolean {
-        return file.getImgType() == TYPE
+    override fun canDecode(streamProvider: StreamProvider): Boolean {
+        val bitmapOption = BitmapFactory.Options()
+        bitmapOption.inJustDecodeBounds = true
+        BitmapFactory.decodeStream(streamProvider.getInputStream(),null,bitmapOption)
+        return bitmapOption.outMimeType== TYPE
     }
 
 
 
-    override fun decode(file: File,width:Int,height:Int): Drawable? {
-        val input = FileInputStream(file)
+    override fun decode(streamProvider: StreamProvider,width:Int,height:Int): Drawable? {
         val gifDecodeHelper = GifDecodeHelper()
-        gifDecodeHelper.read(input, file.length().toInt())
+        gifDecodeHelper.read(streamProvider.getInputStream(),-1)
         return GifDrawable(gifDecodeHelper)
     }
 

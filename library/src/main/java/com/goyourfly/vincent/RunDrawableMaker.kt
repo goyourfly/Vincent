@@ -6,15 +6,17 @@ import android.os.Handler
 import android.os.Message
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.decoder.DecodeManager
+import com.goyourfly.vincent.decoder.StreamProvider
 import java.io.File
+import java.io.InputStream
 import java.util.concurrent.Callable
 
 /**
  * Created by Administrator on 2017/6/1 0001.
  */
-class RunDrawableMaker(val handler:Handler, val key:String, val file:File,val requestContext: RequestContext):Callable<Drawable>{
+class RunDrawableMaker(val handler:Handler, val key:String, val streamProvider: StreamProvider,val requestContext: RequestContext):Callable<Drawable>{
     override fun call(): Drawable? {
-        var drawable = DecodeManager.decode(file,requestContext.resizeWidth,requestContext.resizeHeight)
+        var drawable = DecodeManager.decode(streamProvider,requestContext.resizeWidth,requestContext.resizeHeight)
         // 有时候可能需要Bitmap的转换
         if(drawable is BitmapDrawable
                 && drawable.bitmap != null){

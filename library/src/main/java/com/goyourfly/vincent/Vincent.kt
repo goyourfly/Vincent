@@ -2,15 +2,12 @@ package com.goyourfly.vincent
 
 import android.content.ContentResolver
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.TextUtils
-import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
 import com.goyourfly.vincent.cache.CacheManager
-import com.goyourfly.vincent.cache.FileCacheManager
+import com.goyourfly.vincent.cache.FileLruCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
 import com.goyourfly.vincent.common.calculateMemoryCacheSize
@@ -19,6 +16,7 @@ import com.goyourfly.vincent.target.ImageTarget
 import com.goyourfly.vincent.target.Target
 import com.goyourfly.vincent.transform.Transform
 import java.io.File
+import java.io.InputStream
 
 /**
  * Created by gaoyufei on 2017/5/31.
@@ -28,7 +26,7 @@ import java.io.File
 object Vincent{
     var dispatcher:Dispatcher? = null
     var memoryCache:CacheManager<Drawable>? = null
-    var fileCache:CacheManager<File>? = null
+    var fileCache:CacheManager<InputStream>? = null
     var context:Context? = null
 
 
@@ -39,7 +37,7 @@ object Vincent{
             memoryCache = MemoryCacheManager(calculateMemoryCacheSize(context))
         }
         if(fileCache == null){
-            fileCache = FileCacheManager(1024 * 1024 * 100,"data/data/${context.packageName}/vincent/cache/")
+            fileCache = FileLruCacheManager("data/data/${context.packageName}/cache/vincent",1024 * 1024 * 100,1)
         }
         if(dispatcher == null){
             dispatcher = Dispatcher(context.resources,memoryCache!!, fileCache!!)

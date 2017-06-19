@@ -15,38 +15,29 @@ class MemoryCacheManager(val cacheSize:Int):CacheManager<Drawable>{
 
     val lruCache:LruCache<String,Drawable> = MyLruCache(cacheSize)
 
-    override fun contain(key: String): Boolean {
+    override fun exist(key: String): Boolean {
         return lruCache.get(key) != null
     }
-    override fun set(key: String, value: Drawable) {
+    override fun write(key: String, value: Drawable): Boolean {
         lruCache.put(key,value)
-        "set:$key=$value".logD()
+        return true
     }
 
-    override fun get(key: String):Drawable? {
-        "get:key=$key,size:${lruCache.size()}/${lruCache.maxSize()}".logD()
+    override fun read(key: String):Drawable? {
         return lruCache.get(key)
     }
 
-    override fun delete(key: String):Drawable? {
-        "delete:key=$key".logD()
-        val drawable = lruCache.remove(key)
-        return drawable
+    override fun delete(key: String):Boolean {
+        lruCache.remove(key)
+        return true
     }
 
     override fun clear() {
-        "clear------------>>>".logD()
         lruCache.evictAll()
     }
 
-    override fun trimToSize() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            lruCache.trimToSize(cacheSize)
-        }
-    }
-
-    override fun count(): Int {
-        return 0
+    override fun size(): Long {
+        return lruCache.size().toLong()
     }
 
     class MyLruCache(maxSize:Int):LruCache<String,Drawable>(maxSize){

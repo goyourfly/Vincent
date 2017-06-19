@@ -9,13 +9,17 @@ import android.os.HandlerThread
 import android.os.Looper
 import android.os.Message
 import com.goyourfly.vincent.cache.CacheManager
+import com.goyourfly.vincent.cache.FileLruCacheManager
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.decoder.StreamProvider
 import com.goyourfly.vincent.handle.FileRequestHandler
 import com.goyourfly.vincent.handle.HttpRequestHandler
 import com.goyourfly.vincent.handle.RequestHandler
 import com.goyourfly.vincent.handle.ResourceRequestHandler
 import com.goyourfly.vincent.target.ImageTarget
 import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
 import java.util.concurrent.*
 
 /**
@@ -25,7 +29,7 @@ import java.util.concurrent.*
 class Dispatcher(
         val res: Resources,
         val memoryCache: CacheManager<Drawable>,
-        val fileCache: CacheManager<File>) {
+        val fileCache: CacheManager<InputStream>) {
 
     object What {
         val SUBMIT = 1
@@ -36,7 +40,6 @@ class Dispatcher(
 
         val BITMAP_DECODE_COMPLETE = 7
         val BITMAP_DECODE_ERROR = 8
-        val TRIM_FILE_TO_SIZE = 9
 
         fun getName(i: Int): String {
             return when (i) {
@@ -46,7 +49,6 @@ class Dispatcher(
                 DOWNLOAD_ERROR -> "5:DOWNLOAD_ERROR"
                 BITMAP_DECODE_COMPLETE -> "7:BITMAP_DECODE_COMPLETE"
                 BITMAP_DECODE_ERROR -> "8:BITMAP_DECODE_ERROR"
-                TRIM_FILE_TO_SIZE -> "9:TRIM_FILE_TO_SIZE"
                 else -> {
                     "$i:UNKNOWN"
                 }
@@ -62,7 +64,7 @@ class Dispatcher(
     val executor = Executors.newFixedThreadPool(8)
     val executorBitmap = Executors.newSingleThreadExecutor()
     val executorManager = TaskManager()
-    val networkHandler = arrayListOf<RequestHandler<File>>(HttpRequestHandler(fileCache), FileRequestHandler(fileCache), ResourceRequestHandler(fileCache, res))
+    val networkHandler = arrayListOf(HttpRequestHandler(fileCache), FileRequestHandler(fileCache), ResourceRequestHandler(fileCache, res))
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
@@ -91,12 +93,12 @@ class Dispatcher(
                             val executor: ExecutorService,
                             val executorBitmap: ExecutorService,
                             val taskManager: TaskManager,
-                            val networkHandler: ArrayList<RequestHandler<File>>,
+                            val networkHandler: ArrayList<RequestHandler<Boolean>>,
                             val memoryCache: CacheManager<Drawable>,
-                            val fileCache: CacheManager<File>,
+                            val fileCache: CacheManager<InputStream>,
                             val handlerMain: Handler) : Handler(looper) {
 
-        fun getRequestHandler(uri: Uri): RequestHandler<File>? {
+        fun getRequestHandler(uri: Uri): RequestHandler<Boolean>? {
             for (requestHandler in networkHandler) {
                 if (requestHandler.canHandle(uri))
                     return requestHandler
@@ -113,15 +115,12 @@ class Dispatcher(
 
                     taskManager.put(key, requestInfo)
                     // 判断本地文件系统是否有该图片
-                    if (fileCache.contain(requestInfo.keyForFileCache)) {
+                    if (fileCache.exist(requestInfo.keyForCache)) {
                         requestInfo.setFrom(LoadFrom.FROM_SD_CARD)
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
                         return
                     }
                     requestInfo.setFrom(LoadFrom.FROM_NET)
-                    // 触发清空缓存
-                    removeMessages(What.TRIM_FILE_TO_SIZE)
-                    sendMessageDelayed(obtainMessage(What.TRIM_FILE_TO_SIZE), 1000 * 5)
                     // 如果都没有，去网络下载
                     requestInfo.futureDownload = executor.submit(RunFileDownloader(this, getRequestHandler(requestInfo.uri), requestInfo))
                 }
@@ -140,8 +139,7 @@ class Dispatcher(
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.get(key)!!
                         measureViewSize(requestInfo)
-                        val file = fileCache.get(requestInfo.keyForFileCache)!!
-                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, file, requestInfo))
+                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, StreamProvider(requestInfo.keyForCache,fileCache as FileLruCacheManager), requestInfo))
                     }else{
                         val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
                         errMsg.obj = key
@@ -155,24 +153,13 @@ class Dispatcher(
                         val requestInfo = taskManager.remove(key)
                         val drawable = requestInfo?.future?.get()
                         if (drawable != null) {
-                            memoryCache.set(requestInfo.keyForMemoryCache, drawable)
+                            memoryCache.write(requestInfo.keyForCache, drawable)
                             handlerMain.post { requestInfo.target.onComplete(drawable) }
                         }
                     }else{
                         val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
                         errMsg.obj = key
                         sendMessage(errMsg)
-                    }
-                }
-
-            // 每10秒清空一次缓存
-                What.TRIM_FILE_TO_SIZE -> {
-                    removeMessages(What.TRIM_FILE_TO_SIZE)
-                    // 如果当前有任务，不清空
-                    if (taskManager.size() == 0) {
-                        fileCache.trimToSize()
-                    } else {
-                        sendMessageDelayed(obtainMessage(What.TRIM_FILE_TO_SIZE), 1000 * 5)
                     }
                 }
 
@@ -229,9 +216,9 @@ class Dispatcher(
 
         //TODO LRUCACHE 有个坑，在回收的时候会导致图片部分黑掉
         // 首先判断内存的缓存中是否存在该图片
-        if (memoryCache.contain(request.keyForMemoryCache)) {
+        if (memoryCache.exist(request.keyForCache)) {
             executorManager.remove(request.key)
-            val bitmap = memoryCache.get(request.keyForMemoryCache)
+            val bitmap = memoryCache.read(request.keyForCache)
             if (bitmap != null) {
                 request.setFrom(LoadFrom.FROM_MEMORY)
                 request.target.onComplete(bitmap)

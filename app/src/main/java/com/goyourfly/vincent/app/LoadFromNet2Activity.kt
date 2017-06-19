@@ -45,7 +45,7 @@ class LoadFromNet2Activity : AppCompatActivity() {
 
     fun getImage() {
         loading = false
-        DataProvider.fetchImages("Material Wallpaper",object : DataProvider.ImageCallback {
+        DataProvider.fetchImages("Material Wallpaper",adapter.itemCount,50,object : DataProvider.ImageCallback {
             override fun onFailed(e: IOException) {
                 e.printStackTrace()
                 loading = true

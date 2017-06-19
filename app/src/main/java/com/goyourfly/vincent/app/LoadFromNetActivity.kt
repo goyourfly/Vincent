@@ -31,7 +31,7 @@ class LoadFromNetActivity : AppCompatActivity() {
 
     fun getImage() {
         loading = false
-        DataProvider.fetchImages("Cat Wallpaper",object : DataProvider.ImageCallback {
+        DataProvider.fetchImages("Cat Wallpaper",0,150,object : DataProvider.ImageCallback {
             override fun onFailed(e: IOException) {
                 e.printStackTrace()
                 loading = true

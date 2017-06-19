@@ -17,7 +17,7 @@ interface Decoder {
      * 如果其中一个为0，则按比例缩放
      * 如果都不为0，裁剪
      */
-    fun decode(file:File,width:Int,height:Int):Drawable?
+    fun decode(streamProvider: StreamProvider,width:Int,height:Int):Drawable?
 
-    fun canDecode(file: File):Boolean
+    fun canDecode(streamProvider: StreamProvider):Boolean
 }
