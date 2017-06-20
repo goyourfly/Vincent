@@ -189,7 +189,6 @@ class Dispatcher(
                     retry++
                     Thread.sleep(50)
                 }
-                "InitViewSizeCostTime:${System.currentTimeMillis() - time}".logD()
             }
         }
     }
@@ -214,7 +213,6 @@ class Dispatcher(
             }
         }
 
-        //TODO LRUCACHE 有个坑，在回收的时候会导致图片部分黑掉
         // 首先判断内存的缓存中是否存在该图片
         if (memoryCache.exist(request.keyForCache)) {
             executorManager.remove(request.key)

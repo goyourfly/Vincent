@@ -18,7 +18,6 @@ import android.app.Activity
 import android.database.Cursor
 import android.net.Uri
 import com.goyourfly.multiple.adapter.viewholder.view.CheckBoxFactory
-import com.goyourfly.vincent.transform.CircleTransform
 
 
 class GalleryActivity : AppCompatActivity() {
@@ -85,22 +84,22 @@ class GalleryActivity : AppCompatActivity() {
         }
 
 
-        override fun onBindViewHolder(p0: ViewHolder, p1: Int) {
-            "onBindViewHolder:$p1,${p0.image.hashCode()}".logD()
-            Vincent.with(p0.image.context)
-                    .load(list.get(p1))
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            "onBindViewHolder:$position,${holder.image.hashCode()}".logD()
+            Vincent.with(holder.image.context)
+                    .load(list.get(position))
                     .placeholder(R.drawable.loading)
                     .error(R.drawable.loading_error)
                     .fit()
                     .transform(RoundRectTransform(20F))
-                    .into(p0.image)
+                    .into(holder.image)
 
-//            Picasso.with(p0.image.context)
-//                    .load(list.get(p1))
+//            Picasso.with(holder.image.context)
+//                    .load(list.get(position))
 //                    .placeholder(R.drawable.loading)
 //                    .error(R.drawable.loading_error)
 //                    .fit()
-//                    .into(p0.image)
+//                    .into(holder.image)
         }
 
         override fun getItemCount(): Int {

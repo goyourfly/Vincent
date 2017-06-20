@@ -5,11 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import com.goyourfly.vincent.Vincent
-import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.transform.CircleTransform
 import com.goyourfly.vincent.transform.RoundRectTransform
-import com.squareup.picasso.Picasso
 
 /**
  * Created by Administrator on 2017/6/18 0018.
@@ -26,24 +24,25 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
     }
 
 
-    override fun onBindViewHolder(p0: ViewHolder, p1: Int) {
-//        if (p1 % 2 == 0) {
-        p0.image.tag = p1
-        Vincent.with(p0.image.context)
-                .load(list.get(p1))
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+//        if (position % 2 == 0) {
+        holder.image.tag = position
+        holder.text.text = "$position"
+        Vincent.with(holder.image.context)
+                .load(list.get(position))
                 .placeholder(R.drawable.loading)
                 .error(R.drawable.loading_error)
                 .fit()
                 .transform(RoundRectTransform(20F))
 //                .transform(CircleTransform())
-                .into(p0.image)
+                .into(holder.image)
 //        } else {
-//            Picasso.with(p0.image.context)
-//                    .load(list.get(p1))
+//            Picasso.with(holder.image.context)
+//                    .load(list.get(position))
 //                    .placeholder(R.drawable.loading)
 //                    .error(R.drawable.loading_error)
 //                    .fit()
-//                    .into(p0.image)
+//                    .into(holder.image)
 //        }
 
     }
@@ -56,5 +55,6 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val image = view.findViewById(R.id.image) as ImageView
+        val text = view.findViewById(R.id.text) as TextView
     }
 }

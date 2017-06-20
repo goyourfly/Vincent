@@ -35,8 +35,8 @@ object DataProvider {
                 val resultObj = Gson().fromJson(result, SearchBase::class.java)
                 val list = mutableListOf<String>()
                 for (data in resultObj.value) {
-                    list.add(data.contentUrl)
-//                    list.add(data.thumbnailUrl)
+//                    list.add(data.contentUrl)
+                    list.add(data.thumbnailUrl)
                 }
                 callback.onSuccess(list)
             }

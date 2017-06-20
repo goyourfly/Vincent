@@ -15,4 +15,14 @@
         android:layout_height="match_parent"
         android:scaleType="centerCrop" />
 
+    <TextView
+        android:id="@+id/text"
+        android:layout_gravity="right"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 </net.soulwolf.widget.ratiolayout.widget.RatioFrameLayout>

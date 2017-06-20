@@ -1,11 +1,7 @@
 package com.goyourfly.vincent
 
 import android.os.Handler
-import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.handle.RequestHandler
-import java.io.File
-import java.io.FileNotFoundException
-import java.io.InputStream
 import java.util.concurrent.Callable
 
 /**
@@ -17,17 +13,27 @@ class RunFileDownloader(val handler: Handler,
                         val requestContext: RequestContext) : Callable<Boolean> {
     override fun call(): Boolean {
         if (requestHandler == null) {
-            errorHandle()
+            errorMsg()
             return false
         }
-        val result = requestHandler.fetchSync(requestContext.keyForCache, requestContext.uri)
-        val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_FINISH)
-        msg.obj = requestContext.key
-        handler.sendMessage(msg)
-        return result
+        try {
+            val result = requestHandler.fetchSync(requestContext.keyForCache, requestContext.uri)
+            if(result) {
+                val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_FINISH)
+                msg.obj = requestContext.key
+                handler.sendMessage(msg)
+            }else{
+                errorMsg()
+            }
+            return result
+        }catch (e:Exception){
+            e.printStackTrace()
+            errorMsg()
+            return false
+        }
     }
 
-    fun errorHandle() {
+    fun errorMsg() {
         val msg = handler.obtainMessage(Dispatcher.What.DOWNLOAD_ERROR)
         msg.obj = requestContext.key
         handler.sendMessage(msg)

@@ -20,16 +20,13 @@ class HttpRequestHandler(val fileCacheManager: CacheManager<InputStream>) : Requ
 
     @Throws(IOException::class, NetworkErrorException::class)
     override fun fetchSync(key: String, uri: Uri): Boolean {
-        "HttpRequestHandlerStart:${uri.toString()}".logD()
-
         val url = URL(uri.toString())
         val con: HttpURLConnection = url.openConnection() as HttpURLConnection
-//        con.connectTimeout = TIMEOUT
+        con.connectTimeout = TIMEOUT
         con.requestMethod = "GET"
         if (con.responseCode != HttpURLConnection.HTTP_OK) {
             return false
         }
-        "HttpRequestHandlerResponse:${uri.toString()}".logD()
         val result = fileCacheManager.write(key, con.inputStream)
         con.disconnect()
         return result
