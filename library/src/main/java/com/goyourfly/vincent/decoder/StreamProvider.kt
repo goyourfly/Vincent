@@ -13,7 +13,6 @@ import java.io.InputStream
 class StreamProvider (val key:String,val fileLruCacheManager: CacheManager<InputStream>){
     fun getInputStream():InputStream?{
         val stream =  fileLruCacheManager.read(key)
-        "GetInputStream:${stream}".logD()
         return stream
     }
 }

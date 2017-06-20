@@ -38,12 +38,16 @@ data class RequestContext(
     val keyForCache: String = keyGenerator.generate(uri.toString())
 
     var futureDownload: Future<Boolean>? = null
-    var future: Future<Drawable>? = null
-    private var from: LoadFrom? = null
+    var futureDecode: Future<Drawable>? = null
+
+    /**
+     * 一些调试信息
+     */
+    var debugInfo = DebugInfo(null)
 
     fun cancel() {
-        futureDownload?.cancel(true)
-        future?.cancel(true)
+        futureDownload?.cancel(false)
+        futureDecode?.cancel(false)
     }
 
     override fun equals(other: Any?): Boolean {
@@ -59,13 +63,4 @@ data class RequestContext(
         val drawable = context.resources.getDrawable(id)
         return drawable
     }
-
-    fun setFrom(from: LoadFrom) {
-        if (this.from == null) {
-            "LoadFrom:$from".logD()
-            this.from = from
-        }
-    }
-
-    fun from():LoadFrom? = from
 }

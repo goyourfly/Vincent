@@ -1,6 +1,7 @@
 package com.goyourfly.vincent
 
 import android.os.Handler
+import android.os.SystemClock
 import com.goyourfly.vincent.handle.RequestHandler
 import java.util.concurrent.Callable
 
@@ -16,6 +17,7 @@ class RunFileDownloader(val handler: Handler,
             errorMsg()
             return false
         }
+        val debugTime = SystemClock.elapsedRealtime()
         try {
             val result = requestHandler.fetchSync(requestContext.keyForCache, requestContext.uri)
             if(result) {
@@ -25,6 +27,7 @@ class RunFileDownloader(val handler: Handler,
             }else{
                 errorMsg()
             }
+            requestContext.debugInfo.downloadTime = SystemClock.elapsedRealtime() - debugTime
             return result
         }catch (e:Exception){
             e.printStackTrace()

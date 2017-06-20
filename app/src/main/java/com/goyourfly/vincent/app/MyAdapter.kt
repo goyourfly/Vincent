@@ -7,6 +7,8 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.goyourfly.vincent.Vincent
+import com.goyourfly.vincent.scale.CircleCenterCrop
+import com.goyourfly.vincent.scale.RoundRectCenterCrop
 import com.goyourfly.vincent.transform.RoundRectTransform
 
 /**
@@ -32,8 +34,10 @@ class MyAdapter : RecyclerView.Adapter<MyAdapter.ViewHolder>() {
                 .load(list.get(position))
                 .placeholder(R.drawable.loading)
                 .error(R.drawable.loading_error)
+                .scale(RoundRectCenterCrop(20))
+//                .scale(CircleCenterCrop())
                 .fit()
-                .transform(RoundRectTransform(20F))
+//                .transform(RoundRectTransform(20F))
 //                .transform(CircleTransform())
                 .into(holder.image)
 //        } else {

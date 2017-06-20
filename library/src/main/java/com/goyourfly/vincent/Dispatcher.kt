@@ -4,21 +4,19 @@ import android.accounts.NetworkErrorException
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.Uri
-import android.os.Handler
-import android.os.HandlerThread
-import android.os.Looper
-import android.os.Message
+import android.os.*
 import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.FileLruCacheManager
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.decoder.BitmapDecoder
+import com.goyourfly.vincent.decoder.Decoder
+import com.goyourfly.vincent.decoder.GifDecoder
 import com.goyourfly.vincent.decoder.StreamProvider
 import com.goyourfly.vincent.handle.FileRequestHandler
 import com.goyourfly.vincent.handle.HttpRequestHandler
 import com.goyourfly.vincent.handle.RequestHandler
 import com.goyourfly.vincent.handle.ResourceRequestHandler
 import com.goyourfly.vincent.target.ImageTarget
-import java.io.File
-import java.io.FileInputStream
 import java.io.InputStream
 import java.util.concurrent.*
 
@@ -61,22 +59,24 @@ class Dispatcher(
      * of Vincent called
      */
     val handlerThread = DispatchHandlerThread("Vincent-Dispatcher")
-    val executor = Executors.newFixedThreadPool(8)
-    val executorBitmap = Executors.newSingleThreadExecutor()
+    val executorDownloader = Executors.newFixedThreadPool(4)
+    val executorDecoder = Executors.newSingleThreadExecutor()
     val executorManager = TaskManager()
     val networkHandler = arrayListOf(HttpRequestHandler(fileCache), FileRequestHandler(fileCache), ResourceRequestHandler(fileCache, res))
+    val imageDecoder = arrayListOf(BitmapDecoder(), GifDecoder())
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())
 
     init {
         handlerThread.start()
         handler = DispatcherHandler(handlerThread.looper,
-                executor,
-                executorBitmap,
+                executorDownloader,
+                executorDecoder,
                 executorManager,
                 networkHandler,
                 memoryCache,
                 fileCache,
+                imageDecoder,
                 handlerMain)
     }
 
@@ -96,6 +96,7 @@ class Dispatcher(
                             val networkHandler: ArrayList<RequestHandler<Boolean>>,
                             val memoryCache: CacheManager<Drawable>,
                             val fileCache: CacheManager<InputStream>,
+                            val imageDecoder: List<Decoder>,
                             val handlerMain: Handler) : Handler(looper) {
 
         fun getRequestHandler(uri: Uri): RequestHandler<Boolean>? {
@@ -116,11 +117,11 @@ class Dispatcher(
                     taskManager.put(key, requestInfo)
                     // 判断本地文件系统是否有该图片
                     if (fileCache.exist(requestInfo.keyForCache)) {
-                        requestInfo.setFrom(LoadFrom.FROM_SD_CARD)
+                        requestInfo.debugInfo.from = LoadFrom.FROM_SD_CARD
                         sendMessage(obtainMessage(What.DOWNLOAD_FINISH, key))
                         return
                     }
-                    requestInfo.setFrom(LoadFrom.FROM_NET)
+                    requestInfo.debugInfo.from = LoadFrom.FROM_NET
                     // 如果都没有，去网络下载
                     requestInfo.futureDownload = executor.submit(RunFileDownloader(this, getRequestHandler(requestInfo.uri), requestInfo))
                 }
@@ -140,7 +141,11 @@ class Dispatcher(
                         val requestInfo = taskManager.get(key)!!
                         // 计算View尺寸
                         measureViewSize(requestInfo)
-                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, StreamProvider(requestInfo.keyForCache, fileCache as FileLruCacheManager), requestInfo))
+                        requestInfo.futureDecode = executorBitmap.submit(RunDrawableMaker(this,
+                                key,
+                                StreamProvider(requestInfo.keyForCache, fileCache as FileLruCacheManager),
+                                requestInfo,
+                                imageDecoder))
                     } else {
                         val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
                         errMsg.obj = key
@@ -152,11 +157,12 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.remove(key)
-                        val drawable = requestInfo?.future?.get()
+                        val drawable = requestInfo?.futureDecode?.get()
                         if (drawable != null) {
                             memoryCache.write(requestInfo.keyForCache, drawable)
                             handlerMain.post { requestInfo.target.onComplete(drawable) }
                         }
+                        "DebugInfo->${requestInfo?.debugInfo}".logD()
                     } else {
                         val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
                         errMsg.obj = key
@@ -177,20 +183,21 @@ class Dispatcher(
         fun measureViewSize(requestInfo: RequestContext?) {
             if (requestInfo == null)
                 return
+            val debugTime = SystemClock.elapsedRealtime()
             // 获取图片宽高
             if (requestInfo.fit && requestInfo.target is ImageTarget) {
-                val time = System.currentTimeMillis()
                 var retry = 0
                 while (retry < 40) {
-                    if (requestInfo.resizeWidth != 0
-                            || requestInfo.resizeHeight != 0)
-                        break
                     requestInfo.resizeWidth = requestInfo.target.imageView.measuredWidth
                     requestInfo.resizeHeight = requestInfo.target.imageView.measuredHeight
                     retry++
+                    if (requestInfo.resizeWidth != 0
+                            || requestInfo.resizeHeight != 0)
+                        break
                     Thread.sleep(50)
                 }
             }
+            requestInfo.debugInfo.mesureViewTime = SystemClock.elapsedRealtime() - debugTime
         }
     }
 
@@ -217,7 +224,7 @@ class Dispatcher(
             executorManager.remove(request.key)
             val bitmap = memoryCache.read(request.keyForCache)
             if (bitmap != null) {
-                request.setFrom(LoadFrom.FROM_MEMORY)
+                request.debugInfo.from = LoadFrom.FROM_MEMORY
                 request.target.onComplete(bitmap)
             }
             return
