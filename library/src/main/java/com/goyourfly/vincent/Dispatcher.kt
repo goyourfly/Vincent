@@ -138,9 +138,10 @@ class Dispatcher(
                     val key = msg.obj as String
                     if (taskManager.containsKey(key)) {
                         val requestInfo = taskManager.get(key)!!
+                        // 计算View尺寸
                         measureViewSize(requestInfo)
-                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, StreamProvider(requestInfo.keyForCache,fileCache as FileLruCacheManager), requestInfo))
-                    }else{
+                        requestInfo.future = executorBitmap.submit(RunDrawableMaker(this, key, StreamProvider(requestInfo.keyForCache, fileCache as FileLruCacheManager), requestInfo))
+                    } else {
                         val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
                         errMsg.obj = key
                         sendMessage(errMsg)
@@ -156,7 +157,7 @@ class Dispatcher(
                             memoryCache.write(requestInfo.keyForCache, drawable)
                             handlerMain.post { requestInfo.target.onComplete(drawable) }
                         }
-                    }else{
+                    } else {
                         val errMsg = obtainMessage(What.BITMAP_DECODE_ERROR)
                         errMsg.obj = key
                         sendMessage(errMsg)
@@ -201,12 +202,10 @@ class Dispatcher(
             // 判断当前target是否有任务
             val requestInfoOld = executorManager.getByTargetId(targetId)
             if (requestInfoOld != null) {
-                "Target[${targetId}] already have a task".logD()
                 // 如果当前有任务，但是任务和之前的一致，则返回，让老任务继续
                 if (requestInfoOld == request) {
                     return
                 }
-                "Target[$targetId] old task not equals new task, so cancel before".logD()
                 // 否则，取消老任务，执行新的任务
                 requestInfoOld.cancel()
                 executorManager.removeByTargetId(targetId)

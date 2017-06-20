@@ -11,9 +11,9 @@ import com.goyourfly.vincent.common.logD
 /**
  * Created by gaoyufei on 2017/5/31.
  */
-class MemoryCacheManager(val cacheSize:Int):CacheManager<Drawable>{
+class MemoryCacheManager(val cacheSize:Long):CacheManager<Drawable>{
 
-    val lruCache:LruCache<String,Drawable> = MyLruCache(cacheSize)
+    val lruCache:LruCache<String,Drawable> = MyLruCache(cacheSize.toInt())
 
     override fun exist(key: String): Boolean {
         return lruCache.get(key) != null

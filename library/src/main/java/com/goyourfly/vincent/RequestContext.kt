@@ -1,15 +1,13 @@
 package com.goyourfly.vincent
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import com.goyourfly.vincent.common.KeyGenerator
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.scale.ScaleType
 import com.goyourfly.vincent.target.Target
 import com.goyourfly.vincent.transform.Transform
-import java.io.File
 import java.util.concurrent.Future
 
 /**
@@ -21,7 +19,7 @@ data class RequestContext(
         val fit: Boolean,
         var resizeWidth: Int,
         var resizeHeight: Int,
-        val scale: Scale,
+        val scale: ScaleType,
         val cache: Cache,
         val priority: Priority,
         val target: Target,

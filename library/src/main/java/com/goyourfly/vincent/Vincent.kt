@@ -1,7 +1,9 @@
 package com.goyourfly.vincent
 
+import android.app.ActivityManager
 import android.content.ContentResolver
 import android.content.Context
+import android.content.pm.ApplicationInfo
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.text.TextUtils
@@ -10,8 +12,10 @@ import com.goyourfly.vincent.cache.CacheManager
 import com.goyourfly.vincent.cache.FileLruCacheManager
 import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
-import com.goyourfly.vincent.common.calculateMemoryCacheSize
+import com.goyourfly.vincent.common.getService
 import com.goyourfly.vincent.common.logD
+import com.goyourfly.vincent.scale.CenterCrop
+import com.goyourfly.vincent.scale.ScaleType
 import com.goyourfly.vincent.target.ImageTarget
 import com.goyourfly.vincent.target.Target
 import com.goyourfly.vincent.transform.Transform
@@ -23,24 +27,34 @@ import java.io.InputStream
  * Vincent is a class which provide
  * full interface to user
  */
-object Vincent{
-    var dispatcher:Dispatcher? = null
-    var memoryCache:CacheManager<Drawable>? = null
-    var fileCache:CacheManager<InputStream>? = null
-    var context:Context? = null
+object Vincent {
+    var config:Config? = null
+    var dispatcher: Dispatcher? = null
+    var memoryCache: CacheManager<Drawable>? = null
+    var fileCache: CacheManager<InputStream>? = null
+    var context: Context? = null
+
+    @JvmStatic
+    fun config(config:Config){
+        this.config = config
+    }
 
 
     @JvmStatic
-    fun with(context:Context):Builder{
+    fun with(context: Context): Builder {
         this.context = context
-        if(memoryCache == null){
-            memoryCache = MemoryCacheManager(calculateMemoryCacheSize(context))
+        if(config == null){
+            config = Config(context)
         }
-        if(fileCache == null){
-            fileCache = FileLruCacheManager("data/data/${context.packageName}/cache/vincent",1024 * 1024 * 100,1)
+
+        if (memoryCache == null) {
+            memoryCache = MemoryCacheManager(config!!.memoryCacheSize)
         }
-        if(dispatcher == null){
-            dispatcher = Dispatcher(context.resources,memoryCache!!, fileCache!!)
+        if (fileCache == null) {
+            fileCache = FileLruCacheManager(config!!.fileCacheDir, config!!.fileCacheSize , 1)
+        }
+        if (dispatcher == null) {
+            dispatcher = Dispatcher(context.resources, memoryCache!!, fileCache!!)
         }
         return Builder(dispatcher!!)
     }
@@ -49,24 +63,24 @@ object Vincent{
     /**
      * Provide all info of request
      */
-    class Builder(val dispatcher: Dispatcher){
+    class Builder(val dispatcher: Dispatcher) {
         /**
          * img uri ,url/file_path
          */
-        var uri:Uri = Uri.EMPTY
+        var uri: Uri = Uri.EMPTY
         /**
          * Resize image size
          */
-        var resizeWidth:Int = 0
-        var resizeHeight:Int = 0
+        var resizeWidth: Int = 0
+        var resizeHeight: Int = 0
         /**
-         * Scale mode, center_crop, center_face
+         * Scale mode, center_crop
          */
-        var scale: Scale = Scale.CENTER_CROP
+        var scaleType: ScaleType = ScaleType.CENTER_CROP
         /**
          * if fit imageview size
          */
-        var fit = false
+        var fit = true
         /**
          * the target for image
          */
@@ -85,83 +99,88 @@ object Vincent{
          */
         var cache: Cache = Cache.FULL
 
-        var priority:Priority = Priority.NORMAL
+        var priority: Priority = Priority.NORMAL
 
         val transformList = arrayListOf<Transform>()
 
-        fun placeholder(id:Int):Builder{
+        fun placeholder(id: Int): Builder {
             this.placeholderId = id
             return this
         }
 
-        fun error(id: Int):Builder{
+        fun error(id: Int): Builder {
             this.errorId = id
             return this
         }
 
-        fun fit():Builder{
-            fit = true
+        fun fit(): Builder {
+            this.fit = true
             return this
         }
 
-        fun resize(width:Int,height:Int):Builder{
-            if(fit)
+        fun unfit(): Builder {
+            this.fit = false
+            return this
+        }
+
+        fun resize(width: Int, height: Int): Builder {
+            if (fit)
                 throw IllegalArgumentException("fit can not resize")
             this.resizeWidth = width
             this.resizeHeight = height
-            if(width == 0
+            if (width == 0
                     && height == 0)
                 throw IllegalArgumentException("The width and height must have a greater than 0")
             return this
         }
 
-        fun transform(transform: Transform):Builder{
+        fun transform(transform: Transform): Builder {
             transformList.add(transform)
             return this
         }
 
-        fun load(path:String):Builder{
-            if(TextUtils.isEmpty(path)){
+        fun load(path: String): Builder {
+            if (TextUtils.isEmpty(path)) {
                 "Path is empty".logD()
                 return this
             }
             val file = File(path)
-            if(file.exists()){
+            if (file.exists()) {
                 return load(file)
             }
             return load(Uri.parse(path))
         }
 
-        fun load(file:File):Builder{
+        fun load(file: File): Builder {
             return load(Uri.fromFile(file))
         }
 
-        fun load(uri: Uri):Builder{
+        fun load(uri: Uri): Builder {
             this.uri = uri
             return this
         }
 
-        fun load(id: Int):Builder{
-            this.uri = Uri.fromParts(ContentResolver.SCHEME_ANDROID_RESOURCE,"",id.toString())
+        fun load(id: Int): Builder {
+            this.uri = Uri.fromParts(ContentResolver.SCHEME_ANDROID_RESOURCE, "", id.toString())
             return this
         }
 
-        fun scale(scale:Scale):Builder{
-            this.scale = scale
+        fun scale(scaleType: ScaleType): Builder {
+            this.scaleType = scaleType
             return this
         }
 
-        fun cache(cache:Cache):Builder{
+        fun cache(cache: Cache): Builder {
             this.cache = cache
             return this
         }
 
-        fun priority(priority: Priority):Builder{
+        fun priority(priority: Priority): Builder {
             this.priority = priority
             return this
         }
 
-        fun into(target: Target){
+        fun into(target: Target) {
             this.target = target
             val requestInfo = RequestContext(
                     context!!,
@@ -169,7 +188,7 @@ object Vincent{
                     fit,
                     resizeWidth,
                     resizeHeight,
-                    scale,
+                    scaleType,
                     cache,
                     priority,
                     target,
@@ -181,8 +200,27 @@ object Vincent{
             dispatcher.dispatchSubmit(requestInfo)
         }
 
-        fun into(imageView: ImageView){
+        fun into(imageView: ImageView) {
             into(ImageTarget(imageView))
+        }
+    }
+
+    class Config(val context: Context) {
+        var memoryCacheSize = calculateMemoryCacheSize(context)
+        var fileCacheSize = 1024 * 1024 * 100L // bytes
+        var fileCacheDir = getCacheDir()
+
+        fun getCacheDir(): String {
+            return "data/data/${context.packageName}/cache/vincent"
+        }
+
+
+        fun calculateMemoryCacheSize(context: Context): Long {
+            val am = getService<ActivityManager>(context, Context.ACTIVITY_SERVICE)
+            val largeHeap = context.applicationInfo.flags and ApplicationInfo.FLAG_LARGE_HEAP != 0
+            val memoryClass = if (largeHeap) am.getLargeMemoryClass() else am.getMemoryClass()
+            // Target ~15% of the available heap.
+            return 1024L * 1024L * memoryClass.toLong() / 7
         }
     }
 }

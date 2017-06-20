@@ -6,6 +6,7 @@ import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import com.goyourfly.multiple.adapter.MultipleSelect
 import com.goyourfly.multiple.adapter.viewholder.view.CheckBoxFactory
+import com.goyourfly.multiple.adapter.viewholder.view.RadioBtnFactory
 import java.io.IOException
 
 
@@ -22,7 +23,7 @@ class LoadFromNetActivity : AppCompatActivity() {
 
         recycler.adapter = MultipleSelect.with(this)
                 .adapter(adapter)
-                .decorateFactory(CheckBoxFactory())
+                .decorateFactory(RadioBtnFactory())
                 .build()
         recycler.layoutManager = mLayoutManager
 

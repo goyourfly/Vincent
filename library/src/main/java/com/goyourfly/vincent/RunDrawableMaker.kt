@@ -4,6 +4,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Message
+import com.goyourfly.vincent.Vincent.context
 import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.decoder.DecodeManager
 import com.goyourfly.vincent.decoder.StreamProvider
@@ -16,7 +17,7 @@ import java.util.concurrent.Callable
  */
 class RunDrawableMaker(val handler:Handler, val key:String, val streamProvider: StreamProvider,val requestContext: RequestContext):Callable<Drawable>{
     override fun call(): Drawable? {
-        var drawable = DecodeManager.decode(streamProvider,requestContext.resizeWidth,requestContext.resizeHeight)
+        var drawable = DecodeManager.decode(requestContext.context,streamProvider,requestContext.scale,requestContext.resizeWidth,requestContext.resizeHeight)
         // 有时候可能需要Bitmap的转换
         if(drawable is BitmapDrawable
                 && drawable.bitmap != null){

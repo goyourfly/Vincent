@@ -53,14 +53,6 @@ fun File.getImgType(): String? {
 
 
 
-fun calculateMemoryCacheSize(context: Context): Int {
-    val am = getService<ActivityManager>(context, ACTIVITY_SERVICE)
-    val largeHeap = context.applicationInfo.flags and FLAG_LARGE_HEAP != 0
-    val memoryClass = if (largeHeap) am.getLargeMemoryClass() else am.getMemoryClass()
-    // Target ~15% of the available heap.
-    return (1024L * 1024L * memoryClass.toLong() / 7).toInt()
-}
-
 
 fun <T> getService(context: Context, service: String): T {
     return context.getSystemService(service) as T
