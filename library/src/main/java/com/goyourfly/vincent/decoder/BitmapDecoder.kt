@@ -20,8 +20,7 @@ class BitmapDecoder : Decoder {
     override fun canDecode(streamProvider: StreamProvider): Boolean {
         val bitmapOption = BitmapFactory.Options()
         bitmapOption.inJustDecodeBounds = true
-        BitmapFactory.decodeStream(streamProvider.getInputStream(),null,bitmapOption)
-        "FileType:${bitmapOption.outMimeType}".logD()
+        BitmapFactory.decodeStream(streamProvider.getInputStream(), null, bitmapOption)
         return when (bitmapOption.outMimeType) {
             TYPE_JPEG -> true
             TYPE_PNG -> true
@@ -31,13 +30,22 @@ class BitmapDecoder : Decoder {
         }
     }
 
-    override fun decode(context: Context,streamProvider: StreamProvider,scaleType: ScaleType, width: Int, height: Int): Drawable? {
-        "Decode:size:$width,$height".logD()
-        if (width == 0 && height == 0) {
-            return BitmapDrawable(context.resources,BitmapFactory.decodeStream(streamProvider.getInputStream()))
+    override fun decode(context: Context,
+                        streamProvider: StreamProvider,
+                        scaleType: ScaleType,
+                        fit: Boolean,
+                        width: Int,
+                        height: Int): Drawable? {
+        if (width == 0
+                && height == 0) {
+            val bitmap = BitmapFactory.decodeStream(streamProvider.getInputStream())
+            return BitmapDrawable(context.resources
+                    ,scaleType.scale(bitmap,bitmap.width,bitmap.height))
         }
         val bitmap = scaleBitmap(streamProvider, width, height)
-        return BitmapDrawable(context.resources,scaleType.scale(bitmap,width,height))
+        if (!fit)
+            return BitmapDrawable(context.resources, scaleType.scale(bitmap,bitmap.width,bitmap.height))
+        return BitmapDrawable(context.resources, scaleType.scale(bitmap, width, height))
     }
 
 
@@ -48,7 +56,7 @@ class BitmapDecoder : Decoder {
         // Read bitmap origin size
         val options = BitmapFactory.Options()
         options.inJustDecodeBounds = true
-        BitmapFactory.decodeStream(streamProvider.getInputStream(),null, options)
+        BitmapFactory.decodeStream(streamProvider.getInputStream(), null, options)
         val bitmapWidth = options.outWidth
         val bitmapHeight = options.outHeight
         "Decode:BitmapSize:$bitmapWidth,$bitmapHeight".logD()
@@ -63,7 +71,7 @@ class BitmapDecoder : Decoder {
         options.inJustDecodeBounds = false
         options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight)
         // read the resized bitmap by set sample size
-        val bitmap = BitmapFactory.decodeStream(streamProvider.getInputStream(),null, options)
+        val bitmap = BitmapFactory.decodeStream(streamProvider.getInputStream(), null, options)
         return bitmap
     }
 

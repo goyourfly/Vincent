@@ -27,7 +27,11 @@ class GifDecoder : Decoder {
     }
 
 
-    override fun decode(context: Context, streamProvider: StreamProvider, scaleType: ScaleType, width: Int, height: Int): Drawable? {
+    override fun decode(context: Context,
+                        streamProvider: StreamProvider,
+                        scaleType: ScaleType,
+                        fit:Boolean,
+                        width: Int, height: Int): Drawable? {
         val gifDecodeHelper = GifDecodeHelper()
         gifDecodeHelper.read(streamProvider.getInputStream(), -1)
         return GifDrawable(gifDecodeHelper)

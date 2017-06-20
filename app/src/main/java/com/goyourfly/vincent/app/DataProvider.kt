@@ -1,7 +1,7 @@
 package com.goyourfly.vincent.app
 
-import android.util.Log
 import com.google.gson.Gson
+import com.goyourfly.vincent.app.dto.SearchBase
 import okhttp3.*
 import java.io.IOException
 

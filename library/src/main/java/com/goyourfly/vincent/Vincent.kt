@@ -14,7 +14,7 @@ import com.goyourfly.vincent.cache.MemoryCacheManager
 import com.goyourfly.vincent.common.HashCodeGenerator
 import com.goyourfly.vincent.common.getService
 import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.scale.CenterCrop
+import com.goyourfly.vincent.scale.RectCenterCrop
 import com.goyourfly.vincent.scale.ScaleType
 import com.goyourfly.vincent.target.ImageTarget
 import com.goyourfly.vincent.target.Target
@@ -67,41 +67,34 @@ object Vincent {
         /**
          * img uri ,url/file_path
          */
-        var uri: Uri = Uri.EMPTY
+        private var uri: Uri = Uri.EMPTY
         /**
          * Resize image size
          */
-        var resizeWidth: Int = 0
-        var resizeHeight: Int = 0
+        private var resizeWidth: Int = 0
+        private var resizeHeight: Int = 0
         /**
          * Scale mode, center_crop
          */
-        var scaleType: ScaleType = ScaleType.CENTER_CROP
+        private var scaleType: ScaleType = RectCenterCrop()
         /**
          * if fit imageview size
          */
-        var fit = true
+        private var fit = true
         /**
          * the target for image
          */
-        var target: Target = Target()
+        private var target: Target = Target()
         /**
          * placeholder res id
          */
-        var placeholderId = -1
+        private var placeholderId = -1
         /**
          * error res id
          */
-        var errorId = -1
+        private var errorId = -1
 
-        /**
-         * cache mode full,origin,fit
-         */
-        var cache: Cache = Cache.FULL
-
-        var priority: Priority = Priority.NORMAL
-
-        val transformList = arrayListOf<Transform>()
+        private val transformList = arrayListOf<Transform>()
 
         fun placeholder(id: Int): Builder {
             this.placeholderId = id
@@ -118,14 +111,12 @@ object Vincent {
             return this
         }
 
-        fun unfit(): Builder {
+        fun notFit(): Builder {
             this.fit = false
             return this
         }
 
         fun resize(width: Int, height: Int): Builder {
-            if (fit)
-                throw IllegalArgumentException("fit can not resize")
             this.resizeWidth = width
             this.resizeHeight = height
             if (width == 0
@@ -165,22 +156,15 @@ object Vincent {
             return this
         }
 
-        fun scale(scaleType: ScaleType): Builder {
+        fun scaleType(scaleType: ScaleType): Builder {
             this.scaleType = scaleType
             return this
         }
 
-        fun cache(cache: Cache): Builder {
-            this.cache = cache
-            return this
-        }
-
-        fun priority(priority: Priority): Builder {
-            this.priority = priority
-            return this
-        }
 
         fun into(target: Target) {
+            if (fit && (resizeWidth > 0 || resizeHeight > 0))
+                throw IllegalArgumentException("fit can not resize")
             this.target = target
             val requestInfo = RequestContext(
                     context!!,
@@ -189,8 +173,6 @@ object Vincent {
                     resizeWidth,
                     resizeHeight,
                     scaleType,
-                    cache,
-                    priority,
                     target,
                     placeholderId,
                     errorId,

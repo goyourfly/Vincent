@@ -1,4 +1,4 @@
-package com.goyourfly.vincent.app
+package com.goyourfly.vincent.app.dto
 
 /**
  * Created by Administrator on 2017/6/18 0018.

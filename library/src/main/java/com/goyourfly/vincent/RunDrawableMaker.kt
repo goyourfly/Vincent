@@ -3,15 +3,9 @@ package com.goyourfly.vincent
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
-import android.os.Message
 import android.os.SystemClock
-import com.goyourfly.vincent.Vincent.context
-import com.goyourfly.vincent.common.logD
-import com.goyourfly.vincent.decoder.DecodeManager
 import com.goyourfly.vincent.decoder.Decoder
 import com.goyourfly.vincent.decoder.StreamProvider
-import java.io.File
-import java.io.InputStream
 import java.util.concurrent.Callable
 
 /**
@@ -29,6 +23,7 @@ class RunDrawableMaker(val handler: Handler,
                 ?.decode(requestContext.context
                         , streamProvider
                         , requestContext.scale
+                        , requestContext.fit
                         , requestContext.resizeWidth
                         , requestContext.resizeHeight)
         // Decode 图片

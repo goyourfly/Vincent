@@ -1,30 +1,27 @@
-package com.goyourfly.vincent.app
+package com.goyourfly.vincent.app.activity
 
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.support.v7.widget.GridLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.LinearLayoutManager
+import com.goyourfly.vincent.app.DataProvider
+import com.goyourfly.vincent.app.adapter.MyAdapter
 import java.io.IOException
 
 
-class LoadFromNet2Activity : AppCompatActivity() {
-    val recycler: RecyclerView by lazy {
-        findViewById(R.id.recycler) as RecyclerView
+class EndlessRecyclerViewSampleActivity : android.support.v7.app.AppCompatActivity() {
+    val recycler: android.support.v7.widget.RecyclerView by lazy {
+        findViewById(com.goyourfly.vincent.app.R.id.recycler) as android.support.v7.widget.RecyclerView
     }
     val adapter = MyAdapter()
-    val mLayoutManager = GridLayoutManager(this,3)
+    val mLayoutManager = android.support.v7.widget.GridLayoutManager(this, 3)
     var loading = true
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_load_from_net)
+        setContentView(com.goyourfly.vincent.app.R.layout.activity_load_from_net)
 
         recycler.adapter = adapter
         recycler.layoutManager = mLayoutManager
 
         getImage()
-        recycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        recycler.addOnScrollListener(object : android.support.v7.widget.RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: android.support.v7.widget.RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 if (dy > 0) //check for scroll down
                 {
@@ -45,7 +42,7 @@ class LoadFromNet2Activity : AppCompatActivity() {
 
     fun getImage() {
         loading = false
-        DataProvider.fetchImages("Material Design",adapter.itemCount,50,object : DataProvider.ImageCallback {
+        com.goyourfly.vincent.app.DataProvider.fetchImages("Material Design", adapter.itemCount, 50, object : DataProvider.ImageCallback {
             override fun onFailed(e: IOException) {
                 e.printStackTrace()
                 loading = true
@@ -56,7 +53,7 @@ class LoadFromNet2Activity : AppCompatActivity() {
                 runOnUiThread {
                     val start = adapter.itemCount
                     adapter.addItems(data)
-                    adapter.notifyItemRangeInserted(start,data.size)
+                    adapter.notifyItemRangeInserted(start, data.size)
                 }
             }
         })

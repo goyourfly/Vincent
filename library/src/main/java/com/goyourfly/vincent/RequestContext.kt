@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import com.goyourfly.vincent.common.KeyGenerator
-import com.goyourfly.vincent.common.logD
 import com.goyourfly.vincent.scale.ScaleType
 import com.goyourfly.vincent.target.Target
 import com.goyourfly.vincent.transform.Transform
@@ -20,8 +19,6 @@ data class RequestContext(
         var resizeWidth: Int,
         var resizeHeight: Int,
         val scale: ScaleType,
-        val cache: Cache,
-        val priority: Priority,
         val target: Target,
         val placeholderId: Int,
         val errorId: Int,

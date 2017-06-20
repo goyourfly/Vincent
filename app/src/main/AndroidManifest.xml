@@ -12,13 +12,14 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".LoadFromNetActivity" />
-        <activity android:name=".LoadFromNet2Activity" />
-        <activity android:name=".GalleryActivity" />
-        <activity android:name=".SingleImageActivity" />
-        <activity android:name=".GifActivity" />
+        <activity android:name=".activity.RecyclerViewSampleActivity" />
+        <activity android:name=".activity.EndlessRecyclerViewSampleActivity" />
+        <activity android:name=".activity.StaggeredRecyclerViewSampleActivity" />
+        <activity android:name=".activity.GallerySampleActivity" />
+        <activity android:name=".activity.SingleImageSampleActivity" />
+        <activity android:name=".activity.GifSampleActivity" />
         <activity
-            android:name=".MainActivity"
+            android:name=".activity.MainActivity"
             android:theme="@style/AppTheme.DarkActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -6,39 +6,47 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context="com.goyourfly.vincent.app.MainActivity">
+    tools:context="com.goyourfly.vincent.app.activity.MainActivity">
 
     <Button
         android:id="@+id/btn_net"
-        android:text="Load from net"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp" />
+        android:layout_marginTop="32dp"
+        android:text="RecyclerView" />
 
     <Button
         android:id="@+id/btn_net_2"
-        android:text="Load from net_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:text="Endless RecyclerView" />
+
+    <Button
+        android:id="@+id/btn_staggered"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Staggered RecyclerView" />
+
     <Button
         android:id="@+id/btn_gallery"
-        android:text="Load from gallery"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:text="Load from gallery" />
 
     <Button
         android:id="@+id/btn_single"
-        android:text="Single image"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:text="Single image" />
 
     <Button
         android:id="@+id/btn_gif"
-        android:text="Gif image"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:text="Gif image" />
 </LinearLayout>

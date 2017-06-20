@@ -185,7 +185,9 @@ class Dispatcher(
                 return
             val debugTime = SystemClock.elapsedRealtime()
             // 获取图片宽高
-            if (requestInfo.fit && requestInfo.target is ImageTarget) {
+            if ((requestInfo.fit ||
+                    (requestInfo.resizeWidth == 0 && requestInfo.resizeHeight == 0))
+                    && requestInfo.target is ImageTarget) {
                 var retry = 0
                 while (retry < 40) {
                     requestInfo.resizeWidth = requestInfo.target.imageView.measuredWidth

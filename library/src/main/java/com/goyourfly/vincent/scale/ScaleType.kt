@@ -7,10 +7,6 @@ import android.graphics.Bitmap
  */
 
 abstract class ScaleType {
-    companion object{
-        @JvmStatic
-        val CENTER_CROP = CenterCrop()
-    }
     /**
      * 将普通的Bitmap裁剪成目标尺寸
      */
