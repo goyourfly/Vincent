@@ -16,12 +16,12 @@ class GifActivity : AppCompatActivity() {
         setContentView(R.layout.activity_single_image)
 
 
-        Vincent.with(this)
-                .load(R.drawable.test_img)
-                .placeholder(R.drawable.loading)
-                .fit()
-                .transform(RoundRectTransform(20F))
-                .error(R.drawable.loading_error)
-                .into(image)
+//        Vincent.with(this)
+//                .load(R.drawable.test_img)
+//                .placeholder(R.drawable.loading)
+//                .fit()
+//                .transform(RoundRectTransform(20F))
+//                .error(R.drawable.loading_error)
+//                .into(image)
     }
 }
