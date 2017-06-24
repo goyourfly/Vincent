@@ -54,7 +54,7 @@ object Vincent {
             fileCache = FileLruCacheManager(config!!.fileCacheDir, config!!.fileCacheSize , 1)
         }
         if (dispatcher == null) {
-            dispatcher = Dispatcher(context.resources, memoryCache!!, fileCache!!)
+            dispatcher = Dispatcher(context,context.resources, memoryCache!!, fileCache!!)
         }
         return Builder(dispatcher!!)
     }

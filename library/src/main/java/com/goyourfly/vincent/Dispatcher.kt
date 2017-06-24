@@ -1,6 +1,7 @@
 package com.goyourfly.vincent
 
 import android.accounts.NetworkErrorException
+import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -12,10 +13,7 @@ import com.goyourfly.vincent.decoder.BitmapDecoder
 import com.goyourfly.vincent.decoder.Decoder
 import com.goyourfly.vincent.decoder.GifDecoder
 import com.goyourfly.vincent.decoder.StreamProvider
-import com.goyourfly.vincent.handle.FileRequestHandler
-import com.goyourfly.vincent.handle.HttpRequestHandler
-import com.goyourfly.vincent.handle.RequestHandler
-import com.goyourfly.vincent.handle.ResourceRequestHandler
+import com.goyourfly.vincent.handle.*
 import com.goyourfly.vincent.target.ImageTarget
 import java.io.InputStream
 import java.util.concurrent.*
@@ -25,6 +23,7 @@ import java.util.concurrent.*
  *
  */
 class Dispatcher(
+        val context: Context,
         val res: Resources,
         val memoryCache: CacheManager<Drawable>,
         val fileCache: CacheManager<InputStream>) {
@@ -62,7 +61,10 @@ class Dispatcher(
     val executorDownloader = Executors.newFixedThreadPool(4)
     val executorDecoder = Executors.newSingleThreadExecutor()
     val executorManager = TaskManager()
-    val networkHandler = arrayListOf(HttpRequestHandler(fileCache), FileRequestHandler(fileCache), ResourceRequestHandler(fileCache, res))
+    val networkHandler = arrayListOf(HttpRequestHandler(fileCache),
+            FileRequestHandler(fileCache),
+            ContentHandler(context,fileCache),
+            ResourceRequestHandler(fileCache, res))
     val imageDecoder = arrayListOf(BitmapDecoder(), GifDecoder())
     var handler: Handler? = null
     var handlerMain = Handler(Looper.getMainLooper())

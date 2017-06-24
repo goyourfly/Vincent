@@ -37,7 +37,7 @@ class StaggeredRecyclerViewSampleActivity : AppCompatActivity() {
 
     fun getImage() {
         loading = false
-        DataProvider.fetchImages("凡高", 0, 150, object : DataProvider.ImageCallback {
+        DataProvider.fetchImages("Dog Wallpaper", 0, 150, object : DataProvider.ImageCallback {
             override fun onFailed(e: IOException) {
                 e.printStackTrace()
                 loading = true
